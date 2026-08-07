@@ -1,0 +1,61 @@
+Table Users {
+  UserID int [pk]
+  Name varchar
+  Email varchar
+  Password varchar
+  Role varchar  // Admin, Employer, JobSeeker
+}
+
+Table Employers {
+  EmployerID int [pk]
+  UserID int [ref: > Users.UserID]
+  CompanyName varchar
+  CompanyDescription text
+  Location varchar
+}
+
+Table JobSeekers {
+  SeekerID int [pk]
+  UserID int [ref: > Users.UserID]
+  FullName varchar
+  Email varchar
+  ResumeID int [ref: > Resumes.ResumeID]
+}
+
+Table Resumes {
+  ResumeID int [pk]
+  SeekerID int [ref: > JobSeekers.SeekerID]
+  FilePath varchar
+  Skills text
+}
+
+Table Jobs {
+  JobID int [pk]
+  EmployerID int [ref: > Employers.EmployerID]
+  Title varchar
+  Description text
+  CategoryID int [ref: > Categories.CategoryID]
+  Location varchar
+  Salary decimal
+  PostedDate date
+}
+
+Table Applications {
+  ApplicationID int [pk]
+  JobID int [ref: > Jobs.JobID]
+  SeekerID int [ref: > JobSeekers.SeekerID]
+  Status varchar  // Pending, Accepted, Rejected
+  AppliedDate date
+}
+
+Table Categories {
+  CategoryID int [pk]
+  CategoryName varchar
+}
+
+Table Companies {
+  CompanyID int [pk]
+  EmployerID int [ref: > Employers.EmployerID]
+  CategoryID int [ref: > Categories.CategoryID]
+  CompanyName varchar
+}
