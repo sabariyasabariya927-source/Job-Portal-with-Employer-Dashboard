@@ -13,32 +13,37 @@ public class Employer {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "EmployerID")
     private Long employerID;
 
-    @Column(nullable = false)
+    @Column(name = "UserID", nullable = false)
     private Long userID;
 
-    @Column(nullable = false)
+    @Column(name = "CompanyName", nullable = false, length = 150)
     private String companyName;
 
-    @Column(length = 500)
+    @Column(name = "CompanyDescription", length = 500)
     private String companyDescription;
 
-    @Column(nullable = false)
+    @Column(name = "Location", nullable = false, length = 100)
     private String location;
 
-    // 🔹 Default constructor
-    public Employer() {}
+    // Default Constructor
+    public Employer() {
+    }
 
-    // 🔹 Parameterized constructor
-    public Employer(Long userID, String companyName, String companyDescription, String location) {
+    // Parameterized Constructor
+    public Employer(Long userID, String companyName,
+                    String companyDescription, String location) {
+
         this.userID = userID;
         this.companyName = companyName;
         this.companyDescription = companyDescription;
         this.location = location;
     }
 
-    // 🔹 Getters and Setters
+    // Getters and Setters
+
     public Long getEmployerID() {
         return employerID;
     }

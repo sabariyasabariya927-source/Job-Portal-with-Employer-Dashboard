@@ -1,15 +1,22 @@
 import { useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import "./Login.css";
 
 function Login() {
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    console.log("Login button clicked");
-    console.log("Email:", email);
+    if (!email || !password) {
+      alert("Please enter email and password");
+      return;
+    }
 
     try {
       const res = await axios.post(
@@ -23,15 +30,42 @@ function Login() {
       console.log("Backend response:", res.data);
 
       if (res.data.success) {
-        alert("Login Success: " + res.data.role);
+
+        // Get role from backend
+        const role = res.data.role.toUpperCase();
+
+        // Save login information
+        localStorage.setItem("email", email);
+        localStorage.setItem("role", role);
+        localStorage.setItem("isLoggedIn", "true");
+
+        // Role based navigation
+        if (role === "ADMIN") {
+          navigate("/admin-dashboard");
+        }
+        else if (role === "EMPLOYER") {
+          navigate("/employer-dashboard");
+        }
+        else if (role === "JOBSEEKER") {
+          navigate("/seeker-dashboard");
+        }
+        else {
+          alert("Unknown user role");
+        }
+
       } else {
         alert(res.data.message);
       }
+
     } catch (error) {
+
       console.error("Login error:", error);
 
       if (error.response) {
-        alert("Login failed: " + error.response.data.message);
+        alert(
+          "Login failed: " +
+          (error.response.data.message || "Invalid email or password")
+        );
       } else {
         alert("Backend connection failed");
       }
@@ -39,34 +73,86 @@ function Login() {
   };
 
   return (
-    <div style={{ textAlign: "center", marginTop: "50px" }}>
-      <h2>Login Page</h2>
+    <div className="login-page">
 
-      <form onSubmit={handleSubmit}>
-        <input
-          type="email"
-          placeholder="Enter Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
+      <div className="login-container">
 
-        <br />
-        <br />
+        {/* Left Side */}
+        <div className="login-left">
+          <div className="overlay">
+            <h1>Job Portal</h1>
+            <p>
+              Find your dream job.<br />
+              Build your career.
+            </p>
+          </div>
+        </div>
 
-        <input
-          type="password"
-          placeholder="Enter Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
+        {/* Right Side */}
+        <div className="login-right">
 
-        <br />
-        <br />
+          <div className="login-box">
 
-        <button type="submit">
-          Login
-        </button>
-      </form>
+            <h1>Welcome</h1>
+
+            <p className="login-subtitle">
+              Log in to your account to continue
+            </p>
+
+            <form onSubmit={handleSubmit}>
+
+              <div className="input-group">
+                <span>👤</span>
+
+                <input
+                  type="email"
+                  placeholder="Email Address"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+
+              <div className="input-group">
+                <span>🔒</span>
+
+                <input
+                  type="password"
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+
+              <div className="forgot-password">
+                Forgot your password?
+              </div>
+
+              <button
+                type="submit"
+                className="login-button"
+              >
+                Log In
+              </button>
+
+            </form>
+
+            <p className="signup-text">
+              Don't have an account?
+              <span> Sign up!</span>
+            </p>
+
+            <div className="social-icons">
+              <span>f</span>
+              <span>𝕏</span>
+              <span>in</span>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
     </div>
   );
 }

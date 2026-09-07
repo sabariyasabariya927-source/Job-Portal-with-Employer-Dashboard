@@ -14,43 +14,56 @@ import com.jobportal.backend.repository.UserRepository;
 
 @RestController
 @RequestMapping("/api/users")
+@CrossOrigin(origins = "http://localhost:3000")
 public class UserController {
 
     @Autowired
     private UserRepository userRepository;
 
-    // 🔹 Register new user
+    // Register new user
     @PostMapping("/register")
     public User registerUser(@RequestBody User user) {
         return userRepository.save(user);
     }
 
-    // 🔹 Get all users
+    // Get all users
     @GetMapping
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }
 
-    // 🔹 Get user by email
+    // Get user by email
     @GetMapping("/{email}")
     public Optional<User> getUserByEmail(@PathVariable String email) {
         return userRepository.findByEmail(email);
     }
 
-    // 🔹 Login user
+    // Login user
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@RequestBody User user) {
-        Optional<User> existingUser = userRepository.findByEmail(user.getEmail());
-        if (existingUser.isPresent() && existingUser.get().getPassword().equals(user.getPassword())) {
-            return ResponseEntity.ok(Map.of(
-                "success", true,
-                "message", "Login successful",
-                "role", existingUser.get().getRole()
-            ));
+
+        Optional<User> existingUser =
+                userRepository.findByEmail(user.getEmail());
+
+        if (existingUser.isPresent()
+                && existingUser.get().getPassword().equals(user.getPassword())) {
+
+            return ResponseEntity.ok(
+                Map.of(
+                    "success", true,
+                    "message", "Login successful",
+                    "role", existingUser.get().getRole()
+                )
+            );
         }
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
-            "success", false,
-            "message", "Invalid email or password"
-        ));
+
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(
+                    Map.of(
+                        "success", false,
+                        "message", "Invalid email or password"
+                    )
+                );
     }
 }
