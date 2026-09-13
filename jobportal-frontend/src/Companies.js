@@ -2,24 +2,24 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Sidebar from "./Sidebar";
 
-function Jobs() {
-  const [jobs, setJobs] = useState([]);
+function Companies() {
+  const [companies, setCompanies] = useState([]);
 
-  const fetchJobs = async () => {
+  const fetchCompanies = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:8081/api/jobs"
+        "http://localhost:8081/api/companies"
       );
 
-      console.log("JOBS:", response.data);
-      setJobs(response.data);
+      console.log("COMPANIES:", response.data);
+      setCompanies(response.data);
     } catch (error) {
-      console.error("JOB API ERROR:", error);
+      console.error("COMPANY API ERROR:", error);
     }
   };
 
   useEffect(() => {
-    fetchJobs();
+    fetchCompanies();
   }, []);
 
   const handleLogout = () => {
@@ -38,10 +38,13 @@ function Jobs() {
         fontFamily: "Arial, sans-serif"
       }}
     >
-      <Sidebar activePage="Jobs" onLogout={handleLogout} />
+      <Sidebar
+        activePage="Companies"
+        onLogout={handleLogout}
+      />
 
       <div style={{ marginLeft: "240px", minHeight: "100vh" }}>
-        
+
         {/* Header */}
         <div
           style={{
@@ -51,18 +54,18 @@ function Jobs() {
           }}
         >
           <h1 style={{ margin: 0, color: "#17232d" }}>
-            Jobs
+            Companies
           </h1>
 
           <p style={{ margin: "5px 0 0", color: "#777" }}>
-            Manage available job postings
+            Manage registered companies
           </p>
         </div>
 
         {/* Content */}
         <div style={{ padding: "30px" }}>
 
-          {/* Total Jobs */}
+          {/* Total Companies */}
           <div
             style={{
               backgroundColor: "#ffffff",
@@ -73,7 +76,7 @@ function Jobs() {
             }}
           >
             <p style={{ margin: 0, color: "#777" }}>
-              💼 Total Jobs
+              🏢 Total Companies
             </p>
 
             <h2
@@ -82,11 +85,11 @@ function Jobs() {
                 fontSize: "32px"
               }}
             >
-              {jobs.length}
+              {companies.length}
             </h2>
           </div>
 
-          {/* Jobs Table */}
+          {/* Companies Table */}
           <div
             style={{
               backgroundColor: "#ffffff",
@@ -96,11 +99,11 @@ function Jobs() {
             }}
           >
             <h2 style={{ marginTop: 0 }}>
-              💼 Available Jobs
+              🏢 Registered Companies
             </h2>
 
             <p style={{ color: "#777" }}>
-              All jobs posted in JobPortal
+              All companies registered in JobPortal
             </p>
 
             <div style={{ overflowX: "auto" }}>
@@ -113,65 +116,65 @@ function Jobs() {
                 <thead>
                   <tr style={{ backgroundColor: "#f0f2f4" }}>
                     <th style={thStyle}>ID</th>
-                    <th style={thStyle}>JOB TITLE</th>
+                    <th style={thStyle}>COMPANY NAME</th>
                     <th style={thStyle}>DESCRIPTION</th>
-                    <th style={thStyle}>LOCATION</th>
-                    <th style={thStyle}>SALARY</th>
-                    <th style={thStyle}>JOB TYPE</th>
+                    <th style={thStyle}>CATEGORY ID</th>
+                    <th style={thStyle}>STATUS</th>
                   </tr>
                 </thead>
 
                 <tbody>
-                  {jobs.length === 0 ? (
+                  {companies.length === 0 ? (
                     <tr>
                       <td
-                        colSpan="6"
+                        colSpan="5"
                         style={{
                           padding: "30px",
                           textAlign: "center",
                           color: "#777"
                         }}
                       >
-                        No jobs found
+                        No companies found
                       </td>
                     </tr>
                   ) : (
-                    jobs.map((job) => (
-                      <tr key={job.jobID}>
+                    companies.map((company) => (
+                      <tr key={company.companyID}>
+
                         <td style={tdStyle}>
-                          #{job.jobID}
+                          #{company.companyID}
                         </td>
 
                         <td style={tdStyle}>
-                          <strong>{job.title}</strong>
+                          <strong>
+                            {company.companyName}
+                          </strong>
                         </td>
 
                         <td style={tdStyle}>
-                          {job.description}
+                          {company.companyDescription ||
+                            "No description available"}
                         </td>
 
                         <td style={tdStyle}>
-                          📍 {job.location}
-                        </td>
-
-                        <td style={tdStyle}>
-                          ₹{job.salary}
+                          #{company.categoryID}
                         </td>
 
                         <td style={tdStyle}>
                           <span
                             style={{
-                              backgroundColor: "#e8f0fe",
-                              color: "#3157a4",
+                              backgroundColor: "#d9f5e5",
+                              color: "#198754",
                               padding: "6px 12px",
-                              borderRadius: "15px",
+                              borderRadius: "20px",
                               fontSize: "13px",
                               fontWeight: "bold"
                             }}
                           >
-                            {job.jobType || "Not Specified"}
+                            Active
                           </span>
                         </td>
+
                       </tr>
                     ))
                   )}
@@ -179,6 +182,7 @@ function Jobs() {
               </table>
             </div>
           </div>
+
         </div>
       </div>
     </div>
@@ -197,4 +201,4 @@ const tdStyle = {
   borderBottom: "1px solid #eee"
 };
 
-export default Jobs;
+export default Companies;

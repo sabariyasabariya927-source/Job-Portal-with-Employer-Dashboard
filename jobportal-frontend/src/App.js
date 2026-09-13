@@ -3,16 +3,14 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import Login from "./Login";
 import AdminDashboard from "./AdminDashboard";
+import EmployerDashboard from "./EmployerDashboard";
 import SeekerDashboard from "./SeekerDashboard";
-
-function EmployerDashboard() {
-  return (
-    <div style={{ textAlign: "center", marginTop: "50px" }}>
-      <h1>Employer Dashboard</h1>
-      <p>Welcome Employer!</p>
-    </div>
-  );
-}
+import Users from "./Users";
+import Jobs from "./Jobs";
+import Applications from "./Applications";
+import Companies from "./Companies";
+import Reports from "./Reports";
+import Settings from "./Settings";
 
 function App() {
   return (
@@ -23,10 +21,13 @@ function App() {
         <Route path="/" element={<Login />} />
 
         {/* Admin */}
-        <Route
-          path="/admin-dashboard"
-          element={<AdminDashboard />}
-        />
+        <Route path="/admin-dashboard" element={<AdminDashboard />} />
+        <Route path="/users" element={<Users />} />
+        <Route path="/jobs" element={<Jobs />} />
+        <Route path="/applications" element={<Applications />} />
+        <Route path="/companies" element={<Companies />} />
+        <Route path="/reports" element={<Reports />} />
+        <Route path="/settings" element={<Settings />} />
 
         {/* Employer */}
         <Route

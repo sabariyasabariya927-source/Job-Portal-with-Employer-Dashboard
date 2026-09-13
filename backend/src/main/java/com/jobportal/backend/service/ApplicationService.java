@@ -29,5 +29,16 @@ public class ApplicationService {
     public void deleteApplication(Long id) {
         repo.deleteById(id);
     }
-}
 
+    public Application updateStatus(Long id, String status) {
+        Optional<Application> result = repo.findById(id);
+
+        if (result.isPresent()) {
+            Application application = result.get();
+            application.setStatus(status);
+            return repo.save(application);
+        }
+
+        return null;
+    }
+}

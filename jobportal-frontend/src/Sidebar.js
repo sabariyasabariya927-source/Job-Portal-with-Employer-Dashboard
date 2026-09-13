@@ -1,16 +1,22 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
 function Sidebar({ activePage = "Dashboard" }) {
+  const navigate = useNavigate();
 
   const menuItems = [
-    { name: "Dashboard", icon: "🏠" },
-    { name: "Users", icon: "👥" },
-    { name: "Jobs", icon: "💼" },
-    { name: "Applications", icon: "📄" },
-    { name: "Companies", icon: "🏢" },
-    { name: "Reports", icon: "📊" },
-    { name: "Settings", icon: "⚙️" }
+    { name: "Dashboard", icon: "🏠", path: "/admin-dashboard" },
+    { name: "Users", icon: "👥", path: "/users" },
+    { name: "Jobs", icon: "💼", path: "/jobs" },
+    { name: "Applications", icon: "📄", path: "/applications" },
+    { name: "Companies", icon: "🏢", path: "/companies" },
+    { name: "Reports", icon: "📊", path: "/reports" },
+    { name: "Settings", icon: "⚙️", path: "/settings" }
   ];
+
+  const handleMenuClick = (item) => {
+    navigate(item.path);
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("email");
@@ -35,184 +41,144 @@ function Sidebar({ activePage = "Dashboard" }) {
         boxShadow: "2px 0 10px rgba(0,0,0,0.15)"
       }}
     >
-
-      {/* LOGO */}
-
+      {/* Logo */}
       <div
         style={{
-          padding: "25px 20px",
-          borderBottom: "1px solid #2d3a44"
+          padding: "20px",
+          borderBottom: "1px solid #2d3d4b"
         }}
       >
-        <h2
-          style={{
-            margin: 0,
-            fontSize: "22px"
-          }}
-        >
+        <h2 style={{ margin: 0 }}>
           💼 JobPortal
         </h2>
 
         <p
           style={{
-            margin: "6px 0 0",
-            color: "#aeb8c0",
-            fontSize: "13px"
+            margin: "5px 0 0",
+            fontSize: "12px",
+            color: "#b8c1c8"
           }}
         >
           Administration Panel
         </p>
       </div>
 
-      {/* ADMIN PROFILE */}
-
+      {/* Admin */}
       <div
         style={{
-          padding: "20px",
-          borderBottom: "1px solid #2d3a44",
-          display: "flex",
-          alignItems: "center",
-          gap: "12px"
+          padding: "15px",
+          borderBottom: "1px solid #2d3d4b"
         }}
       >
-
-        <div
-          style={{
-            width: "42px",
-            height: "42px",
-            borderRadius: "50%",
-            backgroundColor: "#4f46e5",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: "20px"
-          }}
-        >
-          👤
-        </div>
-
-        <div>
-          <strong
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <div
             style={{
-              display: "block",
-              fontSize: "14px"
+              width: "32px",
+              height: "32px",
+              borderRadius: "50%",
+              backgroundColor: "#5b4be7",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              marginRight: "10px"
             }}
           >
-            Administrator
-          </strong>
+            👤
+          </div>
 
-          <span
-            style={{
-              color: "#8fd3a8",
-              fontSize: "12px"
-            }}
-          >
-            ● Online
-          </span>
+          <div>
+            <strong style={{ fontSize: "13px" }}>
+              Administrator
+            </strong>
+
+            <div
+              style={{
+                fontSize: "11px",
+                color: "#65d68a"
+              }}
+            >
+              ● Online
+            </div>
+          </div>
         </div>
-
       </div>
 
-      {/* MENU */}
-
-      <div
-        style={{
-          padding: "20px 12px",
-          flex: 1
-        }}
-      >
-
+      {/* Menu */}
+      <div style={{ padding: "20px 10px" }}>
         <p
           style={{
+            fontSize: "10px",
             color: "#71808c",
-            fontSize: "11px",
             fontWeight: "bold",
-            padding: "0 12px",
-            marginBottom: "12px",
-            letterSpacing: "1px"
+            margin: "0 0 10px 5px"
           }}
         >
           MAIN MENU
         </p>
 
         {menuItems.map((item) => (
-
           <div
             key={item.name}
+            onClick={() => handleMenuClick(item)}
             style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "13px",
-              padding: "12px 14px",
+              padding: "10px 12px",
               marginBottom: "5px",
-              borderRadius: "7px",
+              borderRadius: "6px",
               cursor: "pointer",
-
               backgroundColor:
                 activePage === item.name
                   ? "#2d3d4b"
                   : "transparent",
-
               color:
                 activePage === item.name
                   ? "white"
                   : "#b8c1c8",
-
               fontWeight:
                 activePage === item.name
                   ? "bold"
                   : "normal",
-
-              transition: "0.2s"
+              transition: "0.2s",
+              display: "flex",
+              alignItems: "center"
             }}
           >
-
             <span
               style={{
-                fontSize: "17px"
+                marginRight: "12px",
+                fontSize: "15px"
               }}
             >
               {item.icon}
             </span>
 
-            <span>
-              {item.name}
-            </span>
-
+            <span>{item.name}</span>
           </div>
-
         ))}
-
       </div>
 
-      {/* LOGOUT */}
-
+      {/* Logout */}
       <div
         style={{
-          padding: "15px 12px",
-          borderTop: "1px solid #2d3a44"
+          marginTop: "auto",
+          padding: "15px"
         }}
       >
-
         <button
           onClick={handleLogout}
           style={{
             width: "100%",
-            padding: "12px",
+            padding: "10px",
             border: "none",
-            borderRadius: "7px",
-            backgroundColor: "#ef5350",
+            borderRadius: "6px",
+            backgroundColor: "#dc3545",
             color: "white",
             cursor: "pointer",
-            fontSize: "14px",
             fontWeight: "bold"
           }}
         >
           🚪 Logout
         </button>
-
       </div>
-
     </div>
   );
 }
