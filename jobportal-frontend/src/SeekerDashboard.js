@@ -14,6 +14,7 @@ function SeekerDashboard() {
   const [page, setPage] = useState("home");
 
   const [editMode, setEditMode] = useState(false);
+  const [createMode, setCreateMode] = useState(false);
   const [skills, setSkills] = useState("");
   const [education, setEducation] = useState("");
   const [experience, setExperience] = useState("");
@@ -162,7 +163,47 @@ function SeekerDashboard() {
         String(job.jobID) === String(jobID)
     );
   };
+const createResume = async () => {
+  try {
+    const user = getCurrentUser();
 
+    if (!user) {
+      alert("User not found!");
+      return;
+    }
+
+    if (!education || !skills || !experience) {
+      alert("Please fill all resume details!");
+      return;
+    }
+
+    const newResume = {
+      seekerID: user.id,
+      filePath: null,
+      skills: skills,
+      education: education,
+      experience: experience
+    };
+
+    await axios.post(
+      "http://localhost:8081/api/resumes/add",
+      newResume
+    );
+
+    alert("Resume Created Successfully! ✅");
+
+    setCreateMode(false);
+    setSkills("");
+    setEducation("");
+    setExperience("");
+
+    fetchData();
+
+  } catch (error) {
+    console.error("Create Resume error:", error);
+    alert("Resume creation failed!");
+  }
+};
   const startEditResume = () => {
 
     const resume = getCurrentResume();
@@ -638,13 +679,119 @@ function SeekerDashboard() {
               );
             }
 
-            if (!resume) {
-              return (
-                <p>
-                  Resume not found.
-                </p>
-              );
-            }
+           if (!resume) {
+  if (!createMode) {
+    return (
+      <div>
+        <p>Resume not found.</p>
+
+        <button
+          onClick={() => setCreateMode(true)}
+          style={{
+            backgroundColor: "#198754",
+            color: "white",
+            border: "none",
+            padding: "10px 18px",
+            borderRadius: "6px",
+            cursor: "pointer",
+            fontWeight: "bold"
+          }}
+        >
+          Create Resume
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      style={{
+        border: "1px solid #ccc",
+        padding: "25px",
+        marginTop: "20px",
+        borderRadius: "8px",
+        maxWidth: "600px"
+      }}
+    >
+      <h3>Create Resume</h3>
+
+      <div style={{ marginBottom: "15px" }}>
+        <label><b>Education</b></label>
+        <input
+          type="text"
+          value={education}
+          onChange={(e) => setEducation(e.target.value)}
+          placeholder="Enter education"
+          style={{
+            width: "100%",
+            padding: "10px",
+            marginTop: "5px",
+            boxSizing: "border-box"
+          }}
+        />
+      </div>
+
+      <div style={{ marginBottom: "15px" }}>
+        <label><b>Skills</b></label>
+        <input
+          type="text"
+          value={skills}
+          onChange={(e) => setSkills(e.target.value)}
+          placeholder="Enter skills"
+          style={{
+            width: "100%",
+            padding: "10px",
+            marginTop: "5px",
+            boxSizing: "border-box"
+          }}
+        />
+      </div>
+
+      <div style={{ marginBottom: "20px" }}>
+        <label><b>Experience</b></label>
+        <input
+          type="text"
+          value={experience}
+          onChange={(e) => setExperience(e.target.value)}
+          placeholder="Enter experience"
+          style={{
+            width: "100%",
+            padding: "10px",
+            marginTop: "5px",
+            boxSizing: "border-box"
+          }}
+        />
+      </div>
+
+      <button
+        onClick={createResume}
+        style={{
+          backgroundColor: "#198754",
+          color: "white",
+          border: "none",
+          padding: "10px 18px",
+          borderRadius: "6px",
+          cursor: "pointer",
+          fontWeight: "bold",
+          marginRight: "10px"
+        }}
+      >
+        Save Resume
+      </button>
+
+      <button
+        onClick={() => setCreateMode(false)}
+        style={{
+          padding: "10px 18px",
+          borderRadius: "6px",
+          cursor: "pointer"
+        }}
+      >
+        Cancel
+      </button>
+    </div>
+  );
+}
 
             if (editMode) {
 

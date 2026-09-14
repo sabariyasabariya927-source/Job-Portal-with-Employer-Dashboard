@@ -656,11 +656,21 @@ function EmployerDashboard() {
                 {selectedResume.experience}
               </p>
 
-              <p>
-                <strong>Resume File:</strong>{" "}
-                {selectedResume.filePath || "No file uploaded"}
-              </p>
+             <p>
+  <strong>Resume File:</strong>{" "}
 
+  {selectedResume.filePath ? (
+    <a
+      href={`http://localhost:8081${selectedResume.filePath}`}
+      target="_blank"
+      rel="noreferrer"
+    >
+      View Resume 📄
+    </a>
+  ) : (
+    "No file uploaded"
+  )}
+</p>
               <button
                 onClick={() => setSelectedResume(null)}
                 style={{
