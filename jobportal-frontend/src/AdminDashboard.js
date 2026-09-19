@@ -19,7 +19,7 @@ function AdminDashboard() {
   const fetchUsers = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:8081/api/users"
+        "https://job-portal-with-employer-dashboard-production.up.railway.app/api/users"
       );
       console.log("USERS FROM BACKEND:", response.data);
       setUsers(response.data);
@@ -32,7 +32,7 @@ function AdminDashboard() {
   const fetchJobs = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:8081/api/jobs"
+        "https://job-portal-with-employer-dashboard-production.up.railway.app/api/jobs"
       );
       console.log("JOBS FROM BACKEND:", response.data);
       setJobs(response.data);
@@ -45,7 +45,7 @@ function AdminDashboard() {
   const fetchApplications = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:8081/api/applications"
+        "https://job-portal-with-employer-dashboard-production.up.railway.app/api/applications"
       );
       console.log("APPLICATIONS FROM BACKEND:", response.data);
       setApplications(response.data);
@@ -64,7 +64,7 @@ function AdminDashboard() {
 
     try {
       await axios.delete(
-        `http://localhost:8081/api/applications/${id}`
+        `https://job-portal-with-employer-dashboard-production.up.railway.app/api/applications/${id}`
       );
 
       alert("Application deleted successfully!");

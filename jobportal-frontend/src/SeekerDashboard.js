@@ -32,19 +32,19 @@ function SeekerDashboard() {
     try {
 
       const jobsResponse = await axios.get(
-        "http://localhost:8081/api/jobs"
+        "https://job-portal-with-employer-dashboard-production.up.railway.app/api/jobs"
       );
 
       const usersResponse = await axios.get(
-        "http://localhost:8081/api/users"
+        "https://job-portal-with-employer-dashboard-production.up.railway.app/api/users"
       );
 
       const resumesResponse = await axios.get(
-        "http://localhost:8081/api/resumes"
+        "https://job-portal-with-employer-dashboard-production.up.railway.app/api/resumes"
       );
 
       const applicationsResponse = await axios.get(
-        "http://localhost:8081/api/applications"
+        "https://job-portal-with-employer-dashboard-production.up.railway.app/api/applications"
       );
 
       setJobs(jobsResponse.data);
@@ -125,7 +125,7 @@ function SeekerDashboard() {
       };
 
       await axios.post(
-        "http://localhost:8081/api/applications/add",
+        "https://job-portal-with-employer-dashboard-production.up.railway.app/api/applications/add",
         application
       );
 
@@ -186,7 +186,7 @@ const createResume = async () => {
     };
 
     await axios.post(
-      "http://localhost:8081/api/resumes/add",
+      "https://job-portal-with-employer-dashboard-production.up.railway.app/api/resumes/add",
       newResume
     );
 
@@ -240,7 +240,7 @@ const createResume = async () => {
       };
 
       await axios.patch(
-        `http://localhost:8081/api/resumes/${resume.resumeID}`,
+        `https://job-portal-with-employer-dashboard-production.up.railway.app/api/resumes/${resume.resumeID}`,
         updatedResume
       );
 
@@ -300,7 +300,7 @@ const createResume = async () => {
       setUploading(true);
 
       await axios.post(
-        `http://localhost:8081/api/resumes/${resume.resumeID}/upload`,
+        `https://job-portal-with-employer-dashboard-production.up.railway.app/api/resumes/${resume.resumeID}/upload`,
         formData
       );
 
@@ -967,7 +967,7 @@ const createResume = async () => {
                   <b>Resume File:</b>{" "}
                  {resume.filePath ? (
   <a
-    href={`http://localhost:8081${resume.filePath}`}
+    href={`https://job-portal-with-employer-dashboard-production.up.railway.app${resume.filePath}`}
     target="_blank"
     rel="noreferrer"
   >

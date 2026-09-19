@@ -8,7 +8,7 @@ function Users() {
   const fetchUsers = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:8081/api/users"
+        "https://job-portal-with-employer-dashboard-production.up.railway.app/api/users"
       );
 
       console.log("USERS:", response.data);

@@ -22,19 +22,19 @@ function EmployerDashboard() {
   const loadData = async () => {
     try {
       const jobsResponse = await axios.get(
-        "http://localhost:8081/api/jobs"
+        "https://job-portal-with-employer-dashboard-production.up.railway.app/api/jobs"
       );
 
       const applicationsResponse = await axios.get(
-        "http://localhost:8081/api/applications"
+        "https://job-portal-with-employer-dashboard-production.up.railway.app/api/applications"
       );
 
       const usersResponse = await axios.get(
-        "http://localhost:8081/api/users"
+        "https://job-portal-with-employer-dashboard-production.up.railway.app/api/users"
       );
 
       const resumesResponse = await axios.get(
-        "http://localhost:8081/api/resumes"
+        "https://job-portal-with-employer-dashboard-production.up.railway.app/api/resumes"
       );
 
       setJobs(jobsResponse.data);
@@ -96,7 +96,7 @@ function EmployerDashboard() {
       };
 
       await axios.post(
-        "http://localhost:8081/api/jobs/add",
+        "https://job-portal-with-employer-dashboard-production.up.railway.app/api/jobs/add",
         newJob
       );
 
@@ -121,7 +121,7 @@ function EmployerDashboard() {
   const handleStatusChange = async (applicationID, status) => {
     try {
       await axios.patch(
-        `http://localhost:8081/api/applications/${applicationID}/status`,
+        `https://job-portal-with-employer-dashboard-production.up.railway.app/api/applications/${applicationID}/status`,
         status,
         {
           headers: {
@@ -661,7 +661,7 @@ function EmployerDashboard() {
 
   {selectedResume.filePath ? (
     <a
-      href={`http://localhost:8081${selectedResume.filePath}`}
+      href={`https://job-portal-with-employer-dashboard-production.up.railway.app${selectedResume.filePath}`}
       target="_blank"
       rel="noreferrer"
     >

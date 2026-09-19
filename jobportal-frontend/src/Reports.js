@@ -12,10 +12,10 @@ function Reports() {
     try {
       const [usersRes, jobsRes, applicationsRes, companiesRes] =
         await Promise.all([
-          axios.get("http://localhost:8081/api/users"),
-          axios.get("http://localhost:8081/api/jobs"),
-          axios.get("http://localhost:8081/api/applications"),
-          axios.get("http://localhost:8081/api/companies")
+          axios.get("https://job-portal-with-employer-dashboard-production.up.railway.app/api/users"),
+          axios.get("https://job-portal-with-employer-dashboard-production.up.railway.app/api/jobs"),
+          axios.get("https://job-portal-with-employer-dashboard-production.up.railway.app/api/applications"),
+          axios.get("https://job-portal-with-employer-dashboard-production.up.railway.app/api/companies")
         ]);
 
       setUsers(usersRes.data);
