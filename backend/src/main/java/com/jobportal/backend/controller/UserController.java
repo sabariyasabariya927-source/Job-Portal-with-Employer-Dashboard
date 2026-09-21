@@ -66,4 +66,53 @@ public class UserController {
                     )
                 );
     }
+
+    // Forgot password
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(
+            @RequestBody Map<String, String> data) {
+
+        String email = data.get("email");
+        String newPassword = data.get("newPassword");
+
+        Optional<User> existingUser =
+                userRepository.findByEmail(email);
+
+        if (existingUser.isEmpty()) {
+
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body(
+                        Map.of(
+                            "success", false,
+                            "message", "Email not found"
+                        )
+                    );
+        }
+
+        if (newPassword == null || newPassword.trim().isEmpty()) {
+
+            return ResponseEntity
+                    .badRequest()
+                    .body(
+                        Map.of(
+                            "success", false,
+                            "message", "New password is required"
+                        )
+                    );
+        }
+
+        User user = existingUser.get();
+
+        user.setPassword(newPassword);
+
+        userRepository.save(user);
+
+        return ResponseEntity.ok(
+            Map.of(
+                "success", true,
+                "message", "Password reset successfully"
+            )
+        );
+    }
 }

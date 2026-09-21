@@ -20,12 +20,12 @@ function Login() {
 
     try {
       const res = await axios.post(
-        "https://job-portal-with-employer-dashboard-production.up.railway.app/api/users/login",
-        {
-          email: email,
-          password: password
-        }
-      );
+  "http://localhost:8081/api/users/login",
+  {
+    email: email,
+    password: password
+  }
+);
 
       console.log("Backend response:", res.data);
 

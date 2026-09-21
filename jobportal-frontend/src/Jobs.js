@@ -8,7 +8,7 @@ function Jobs() {
   const fetchJobs = async () => {
     try {
       const response = await axios.get(
-        "https://job-portal-with-employer-dashboard-production.up.railway.app/api/jobs"
+        "http://localhost:8081/api/jobs"
       );
 
       console.log("JOBS:", response.data);
@@ -41,8 +41,7 @@ function Jobs() {
       <Sidebar activePage="Jobs" onLogout={handleLogout} />
 
       <div style={{ marginLeft: "240px", minHeight: "100vh" }}>
-        
-        {/* Header */}
+
         <div
           style={{
             backgroundColor: "#ffffff",
@@ -59,10 +58,8 @@ function Jobs() {
           </p>
         </div>
 
-        {/* Content */}
         <div style={{ padding: "30px" }}>
 
-          {/* Total Jobs */}
           <div
             style={{
               backgroundColor: "#ffffff",
@@ -86,7 +83,6 @@ function Jobs() {
             </h2>
           </div>
 
-          {/* Jobs Table */}
           <div
             style={{
               backgroundColor: "#ffffff",
@@ -179,6 +175,7 @@ function Jobs() {
               </table>
             </div>
           </div>
+
         </div>
       </div>
     </div>

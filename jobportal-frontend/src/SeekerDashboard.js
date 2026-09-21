@@ -3,7 +3,6 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 function SeekerDashboard() {
-
   const navigate = useNavigate();
 
   const [jobs, setJobs] = useState([]);
@@ -15,6 +14,7 @@ function SeekerDashboard() {
 
   const [editMode, setEditMode] = useState(false);
   const [createMode, setCreateMode] = useState(false);
+
   const [skills, setSkills] = useState("");
   const [education, setEducation] = useState("");
   const [experience, setExperience] = useState("");
@@ -24,38 +24,44 @@ function SeekerDashboard() {
 
   const email = localStorage.getItem("email");
 
+  const API = "http://localhost:8081";
+
   useEffect(() => {
     fetchData();
   }, []);
 
   const fetchData = async () => {
     try {
+      setLoading(true);
 
       const jobsResponse = await axios.get(
-        "https://job-portal-with-employer-dashboard-production.up.railway.app/api/jobs"
+        `${API}/api/jobs`
       );
 
       const usersResponse = await axios.get(
-        "https://job-portal-with-employer-dashboard-production.up.railway.app/api/users"
+        `${API}/api/users`
       );
 
       const resumesResponse = await axios.get(
-        "https://job-portal-with-employer-dashboard-production.up.railway.app/api/resumes"
+        `${API}/api/resumes`
       );
 
       const applicationsResponse = await axios.get(
-        "https://job-portal-with-employer-dashboard-production.up.railway.app/api/applications"
+        `${API}/api/applications`
       );
 
-      setJobs(jobsResponse.data);
-      setUsers(usersResponse.data);
-      setResumes(resumesResponse.data);
-      setApplications(applicationsResponse.data);
+      console.log("JOBS:", jobsResponse.data);
+      console.log("USERS:", usersResponse.data);
+      console.log("RESUMES:", resumesResponse.data);
+      console.log("APPLICATIONS:", applicationsResponse.data);
+
+      setJobs(jobsResponse.data || []);
+      setUsers(usersResponse.data || []);
+      setResumes(resumesResponse.data || []);
+      setApplications(applicationsResponse.data || []);
 
       setLoading(false);
-
     } catch (error) {
-
       console.error("Error fetching data:", error);
 
       setLoading(false);
@@ -64,40 +70,71 @@ function SeekerDashboard() {
     }
   };
 
-  const getCurrentUser = () => {
+  const getUserId = (user) => {
+    if (!user) {
+      return null;
+    }
 
-    return users.find(
+    return user.id ?? user.userID ?? user.userId;
+  };
+
+  const getResumeId = (resume) => {
+    if (!resume) {
+      return null;
+    }
+
+    return resume.resumeID ?? resume.resumeId ?? resume.id;
+  };
+
+  const getCurrentUser = () => {
+    if (!email || !users.length) {
+      return null;
+    }
+
+    const currentUser = users.find(
       (user) =>
+        user.email &&
         String(user.email).trim().toLowerCase() ===
-        String(email).trim().toLowerCase()
+          String(email).trim().toLowerCase()
     );
+
+    console.log("CURRENT USER:", currentUser);
+
+    return currentUser || null;
   };
 
   const getCurrentResume = () => {
-
     const user = getCurrentUser();
 
     if (!user) {
       return null;
     }
 
-    return resumes.find(
+    const userId = getUserId(user);
+
+    console.log("CURRENT USER ID:", userId);
+
+    const currentResume = resumes.find(
       (resume) =>
-        String(resume.seekerID) ===
-        String(user.id)
+        String(resume.seekerID) === String(userId) ||
+        String(resume.seekerId) === String(userId)
     );
+
+    console.log("CURRENT RESUME:", currentResume);
+
+    return currentResume || null;
   };
 
   const applyJob = async (jobID) => {
-
     try {
-
       const user = getCurrentUser();
 
       if (!user) {
         alert("User not found!");
         return;
       }
+
+      const userId = getUserId(user);
 
       const resume = getCurrentResume();
 
@@ -106,10 +143,12 @@ function SeekerDashboard() {
         return;
       }
 
+      const resumeId = getResumeId(resume);
+
       const alreadyApplied = applications.some(
         (application) =>
           String(application.jobID) === String(jobID) &&
-          String(application.seekerID) === String(user.id)
+          String(application.seekerID) === String(userId)
       );
 
       if (alreadyApplied) {
@@ -119,93 +158,112 @@ function SeekerDashboard() {
 
       const application = {
         jobID: jobID,
-        seekerID: user.id,
-        resumeID: resume.resumeID,
+        seekerID: userId,
+        resumeID: resumeId,
         status: "Applied"
       };
 
+      console.log("APPLICATION DATA:", application);
+
       await axios.post(
-        "https://job-portal-with-employer-dashboard-production.up.railway.app/api/applications/add",
+        `${API}/api/applications/add`,
         application
       );
 
       alert("Job Applied Successfully! ✅");
 
       fetchData();
-
     } catch (error) {
-
       console.error("Apply Job error:", error);
+
+      if (error.response) {
+        console.error(
+          "Backend response:",
+          error.response.data
+        );
+      }
 
       alert("Job application failed!");
     }
   };
 
   const getMyApplications = () => {
-
     const user = getCurrentUser();
 
     if (!user) {
       return [];
     }
 
+    const userId = getUserId(user);
+
     return applications.filter(
       (application) =>
         String(application.seekerID) ===
-        String(user.id)
+        String(userId)
     );
   };
 
   const getJob = (jobID) => {
-
     return jobs.find(
       (job) =>
         String(job.jobID) === String(jobID)
     );
   };
-const createResume = async () => {
-  try {
-    const user = getCurrentUser();
 
-    if (!user) {
-      alert("User not found!");
-      return;
+  const createResume = async () => {
+    try {
+      const user = getCurrentUser();
+
+      if (!user) {
+        alert("User not found!");
+        return;
+      }
+
+      const userId = getUserId(user);
+
+      if (!education || !skills || !experience) {
+        alert("Please fill all resume details!");
+        return;
+      }
+
+      const newResume = {
+        seekerID: userId,
+        filePath: null,
+        skills: skills,
+        education: education,
+        experience: experience
+      };
+
+      console.log("NEW RESUME:", newResume);
+
+      await axios.post(
+        `${API}/api/resumes/add`,
+        newResume
+      );
+
+      alert("Resume Created Successfully! ✅");
+
+      setCreateMode(false);
+      setSkills("");
+      setEducation("");
+      setExperience("");
+
+      await fetchData();
+    } catch (error) {
+      console.error("Create Resume error:", error);
+
+      if (error.response) {
+        console.error(
+          "Backend response:",
+          error.response.data
+        );
+      }
+
+      alert("Resume creation failed!");
     }
+  };
 
-    if (!education || !skills || !experience) {
-      alert("Please fill all resume details!");
-      return;
-    }
-
-    const newResume = {
-      seekerID: user.id,
-      filePath: null,
-      skills: skills,
-      education: education,
-      experience: experience
-    };
-
-    await axios.post(
-      "https://job-portal-with-employer-dashboard-production.up.railway.app/api/resumes/add",
-      newResume
-    );
-
-    alert("Resume Created Successfully! ✅");
-
-    setCreateMode(false);
-    setSkills("");
-    setEducation("");
-    setExperience("");
-
-    fetchData();
-
-  } catch (error) {
-    console.error("Create Resume error:", error);
-    alert("Resume creation failed!");
-  }
-};
   const startEditResume = () => {
-
     const resume = getCurrentResume();
 
     if (!resume) {
@@ -221,15 +279,15 @@ const createResume = async () => {
   };
 
   const updateResume = async () => {
-
     try {
-
       const resume = getCurrentResume();
 
       if (!resume) {
         alert("Resume not found!");
         return;
       }
+
+      const resumeId = getResumeId(resume);
 
       const updatedResume = {
         seekerID: resume.seekerID,
@@ -239,8 +297,10 @@ const createResume = async () => {
         experience: experience
       };
 
+      console.log("UPDATED RESUME:", updatedResume);
+
       await axios.patch(
-        `https://job-portal-with-employer-dashboard-production.up.railway.app/api/resumes/${resume.resumeID}`,
+        `${API}/api/resumes/${resumeId}`,
         updatedResume
       );
 
@@ -248,18 +308,22 @@ const createResume = async () => {
 
       setEditMode(false);
 
-      fetchData();
-
+      await fetchData();
     } catch (error) {
-
       console.error("Update Resume error:", error);
+
+      if (error.response) {
+        console.error(
+          "Backend response:",
+          error.response.data
+        );
+      }
 
       alert("Resume update failed!");
     }
   };
 
   const handleFileChange = (event) => {
-
     const file = event.target.files[0];
 
     if (!file) {
@@ -269,8 +333,11 @@ const createResume = async () => {
 
     if (file.type !== "application/pdf") {
       alert("Only PDF files are allowed!");
+
       event.target.value = "";
+
       setSelectedFile(null);
+
       return;
     }
 
@@ -278,9 +345,7 @@ const createResume = async () => {
   };
 
   const uploadResume = async () => {
-
     try {
-
       const resume = getCurrentResume();
 
       if (!resume) {
@@ -293,6 +358,8 @@ const createResume = async () => {
         return;
       }
 
+      const resumeId = getResumeId(resume);
+
       const formData = new FormData();
 
       formData.append("file", selectedFile);
@@ -300,7 +367,7 @@ const createResume = async () => {
       setUploading(true);
 
       await axios.post(
-        `https://job-portal-with-employer-dashboard-production.up.railway.app/api/resumes/${resume.resumeID}/upload`,
+        `${API}/api/resumes/${resumeId}/upload`,
         formData
       );
 
@@ -310,15 +377,16 @@ const createResume = async () => {
 
       setUploading(false);
 
-      fetchData();
-
+      await fetchData();
     } catch (error) {
-
       console.error("Upload Resume error:", error);
 
       setUploading(false);
 
-      if (error.response && error.response.data) {
+      if (
+        error.response &&
+        error.response.data
+      ) {
         alert(error.response.data);
       } else {
         alert("Resume PDF upload failed!");
@@ -327,7 +395,6 @@ const createResume = async () => {
   };
 
   const logout = () => {
-
     localStorage.removeItem("email");
     localStorage.removeItem("role");
     localStorage.removeItem("isLoggedIn");
@@ -341,7 +408,6 @@ const createResume = async () => {
         padding: "30px"
       }}
     >
-
       <div
         style={{
           display: "flex",
@@ -349,9 +415,7 @@ const createResume = async () => {
           alignItems: "center"
         }}
       >
-
         <div>
-
           <h1>
             Job Seeker Dashboard
           </h1>
@@ -359,7 +423,6 @@ const createResume = async () => {
           <p>
             Welcome, {email}
           </p>
-
         </div>
 
         <button
@@ -375,7 +438,6 @@ const createResume = async () => {
         >
           Logout
         </button>
-
       </div>
 
       <hr />
@@ -386,11 +448,11 @@ const createResume = async () => {
           marginBottom: "20px"
         }}
       >
-
         <button
           onClick={() => {
             setPage("home");
             setEditMode(false);
+            setCreateMode(false);
           }}
           style={{
             marginRight: "10px",
@@ -405,6 +467,7 @@ const createResume = async () => {
           onClick={() => {
             setPage("applications");
             setEditMode(false);
+            setCreateMode(false);
           }}
           style={{
             marginRight: "10px",
@@ -419,6 +482,7 @@ const createResume = async () => {
           onClick={() => {
             setPage("resume");
             setEditMode(false);
+            setCreateMode(false);
           }}
           style={{
             padding: "10px 18px",
@@ -427,51 +491,42 @@ const createResume = async () => {
         >
           My Resume
         </button>
-
       </div>
 
       <hr />
 
       {page === "home" && (
-
         <div>
-
           <h2>
             Available Jobs
           </h2>
 
           {loading ? (
-
             <p>
               Loading jobs...
             </p>
-
           ) : jobs.length === 0 ? (
-
             <p>
               No jobs available.
             </p>
-
           ) : (
-
             <div>
-
               {jobs.map((job) => {
-
                 const user = getCurrentUser();
+
+                const userId = getUserId(user);
 
                 const alreadyApplied = user
                   ? applications.some(
                       (application) =>
                         String(application.jobID) ===
-                        String(job.jobID) &&
+                          String(job.jobID) &&
                         String(application.seekerID) ===
-                        String(user.id)
+                          String(userId)
                     )
                   : false;
 
                 return (
-
                   <div
                     key={job.jobID}
                     style={{
@@ -481,7 +536,6 @@ const createResume = async () => {
                       borderRadius: "8px"
                     }}
                   >
-
                     <h3>
                       {job.title}
                     </h3>
@@ -503,11 +557,11 @@ const createResume = async () => {
 
                     <p>
                       <b>Job Type:</b>{" "}
-                      {job.jobType || "Not Specified"}
+                      {job.jobType ||
+                        "Not Specified"}
                     </p>
 
                     {alreadyApplied ? (
-
                       <button
                         disabled
                         style={{
@@ -520,9 +574,7 @@ const createResume = async () => {
                       >
                         Already Applied
                       </button>
-
                     ) : (
-
                       <button
                         onClick={() =>
                           applyJob(job.jobID)
@@ -539,399 +591,529 @@ const createResume = async () => {
                       >
                         Apply Job
                       </button>
-
                     )}
-
                   </div>
                 );
               })}
-
             </div>
           )}
-
         </div>
       )}
 
       {page === "applications" && (
-
         <div>
-
           <h2>
             My Applications
           </h2>
 
           {loading ? (
-
             <p>
               Loading applications...
             </p>
-
           ) : getMyApplications().length === 0 ? (
-
             <p>
               You have not applied for any jobs yet.
             </p>
-
           ) : (
-
             <div>
+              {getMyApplications().map(
+                (application) => {
+                  const job = getJob(
+                    application.jobID
+                  );
 
-              {getMyApplications().map((application) => {
+                  return (
+                    <div
+                      key={
+                        application.applicationID
+                      }
+                      style={{
+                        border: "1px solid #ccc",
+                        padding: "20px",
+                        marginBottom: "15px",
+                        borderRadius: "8px"
+                      }}
+                    >
+                      <h3>
+                        {job
+                          ? job.title
+                          : "Job Not Found"}
+                      </h3>
 
-                const job = getJob(application.jobID);
+                      <p>
+                        <b>
+                          Application ID:
+                        </b>{" "}
+                        {application.applicationID}
+                      </p>
 
-                return (
+                      {job && (
+                        <>
+                          <p>
+                            <b>
+                              Location:
+                            </b>{" "}
+                            {job.location}
+                          </p>
 
-                  <div
-                    key={application.applicationID}
-                    style={{
-                      border: "1px solid #ccc",
-                      padding: "20px",
-                      marginBottom: "15px",
-                      borderRadius: "8px"
-                    }}
-                  >
+                          <p>
+                            <b>
+                              Salary:
+                            </b>{" "}
+                            ₹{job.salary}
+                          </p>
 
-                    <h3>
-                      {job
-                        ? job.title
-                        : "Job Not Found"}
-                    </h3>
+                          <p>
+                            <b>
+                              Job Type:
+                            </b>{" "}
+                            {job.jobType ||
+                              "Not Specified"}
+                          </p>
+                        </>
+                      )}
 
-                    <p>
-                      <b>Application ID:</b>{" "}
-                      {application.applicationID}
-                    </p>
+                      <p>
+                        <b>Status:</b>{" "}
 
-                    {job && (
-                      <>
-                        <p>
-                          <b>Location:</b>{" "}
-                          {job.location}
-                        </p>
+                        <span
+                          style={{
+                            padding:
+                              "6px 12px",
+                            borderRadius:
+                              "15px",
+                            fontWeight:
+                              "bold",
+                            backgroundColor:
+                              application.status ===
+                              "Selected"
+                                ? "#d4edda"
+                                : application.status ===
+                                  "Rejected"
+                                ? "#f8d7da"
+                                : application.status ===
+                                  "Under Review"
+                                ? "#fff3cd"
+                                : "#e2e3e5"
+                          }}
+                        >
+                          {application.status}
+                        </span>
+                      </p>
 
-                        <p>
-                          <b>Salary:</b>{" "}
-                          ₹{job.salary}
-                        </p>
-
-                        <p>
-                          <b>Job Type:</b>{" "}
-                          {job.jobType || "Not Specified"}
-                        </p>
-                      </>
-                    )}
-
-                    <p>
-  <b>Status:</b>{" "}
-
-  <span
-    style={{
-      padding: "6px 12px",
-      borderRadius: "15px",
-      fontWeight: "bold",
-      backgroundColor:
-        application.status === "Selected"
-          ? "#d4edda"
-          : application.status === "Rejected"
-          ? "#f8d7da"
-          : application.status === "Under Review"
-          ? "#fff3cd"
-          : "#e2e3e5"
-    }}
-  >
-    {application.status}
-  </span>
-</p>
-                    <p>
-                      <b>Resume ID:</b>{" "}
-                      {application.resumeID}
-                    </p>
-
-                  </div>
-                );
-              })}
-
+                      <p>
+                        <b>
+                          Resume ID:
+                        </b>{" "}
+                        {application.resumeID}
+                      </p>
+                    </div>
+                  );
+                }
+              )}
             </div>
           )}
-
         </div>
       )}
 
       {page === "resume" && (
-
         <div>
-
           <h2>
             My Resume
           </h2>
 
           {(() => {
-
             const user = getCurrentUser();
             const resume = getCurrentResume();
 
             if (!user) {
               return (
-                <p>
-                  User not found.
-                </p>
+                <div>
+                  <p>
+                    User not found.
+                  </p>
+
+                  <p
+                    style={{
+                      color: "#777"
+                    }}
+                  >
+                    Logged in email: {email}
+                  </p>
+                </div>
               );
             }
 
-           if (!resume) {
-  if (!createMode) {
-    return (
-      <div>
-        <p>Resume not found.</p>
+            if (!resume) {
+              if (!createMode) {
+                return (
+                  <div>
+                    <p>
+                      Resume not found.
+                    </p>
 
-        <button
-          onClick={() => setCreateMode(true)}
-          style={{
-            backgroundColor: "#198754",
-            color: "white",
-            border: "none",
-            padding: "10px 18px",
-            borderRadius: "6px",
-            cursor: "pointer",
-            fontWeight: "bold"
-          }}
-        >
-          Create Resume
-        </button>
-      </div>
-    );
-  }
-
-  return (
-    <div
-      style={{
-        border: "1px solid #ccc",
-        padding: "25px",
-        marginTop: "20px",
-        borderRadius: "8px",
-        maxWidth: "600px"
-      }}
-    >
-      <h3>Create Resume</h3>
-
-      <div style={{ marginBottom: "15px" }}>
-        <label><b>Education</b></label>
-        <input
-          type="text"
-          value={education}
-          onChange={(e) => setEducation(e.target.value)}
-          placeholder="Enter education"
-          style={{
-            width: "100%",
-            padding: "10px",
-            marginTop: "5px",
-            boxSizing: "border-box"
-          }}
-        />
-      </div>
-
-      <div style={{ marginBottom: "15px" }}>
-        <label><b>Skills</b></label>
-        <input
-          type="text"
-          value={skills}
-          onChange={(e) => setSkills(e.target.value)}
-          placeholder="Enter skills"
-          style={{
-            width: "100%",
-            padding: "10px",
-            marginTop: "5px",
-            boxSizing: "border-box"
-          }}
-        />
-      </div>
-
-      <div style={{ marginBottom: "20px" }}>
-        <label><b>Experience</b></label>
-        <input
-          type="text"
-          value={experience}
-          onChange={(e) => setExperience(e.target.value)}
-          placeholder="Enter experience"
-          style={{
-            width: "100%",
-            padding: "10px",
-            marginTop: "5px",
-            boxSizing: "border-box"
-          }}
-        />
-      </div>
-
-      <button
-        onClick={createResume}
-        style={{
-          backgroundColor: "#198754",
-          color: "white",
-          border: "none",
-          padding: "10px 18px",
-          borderRadius: "6px",
-          cursor: "pointer",
-          fontWeight: "bold",
-          marginRight: "10px"
-        }}
-      >
-        Save Resume
-      </button>
-
-      <button
-        onClick={() => setCreateMode(false)}
-        style={{
-          padding: "10px 18px",
-          borderRadius: "6px",
-          cursor: "pointer"
-        }}
-      >
-        Cancel
-      </button>
-    </div>
-  );
-}
-
-            if (editMode) {
+                    <button
+                      onClick={() =>
+                        setCreateMode(true)
+                      }
+                      style={{
+                        backgroundColor:
+                          "#198754",
+                        color: "white",
+                        border: "none",
+                        padding:
+                          "10px 18px",
+                        borderRadius:
+                          "6px",
+                        cursor:
+                          "pointer",
+                        fontWeight:
+                          "bold"
+                      }}
+                    >
+                      Create Resume
+                    </button>
+                  </div>
+                );
+              }
 
               return (
-
                 <div
                   style={{
-                    border: "1px solid #ccc",
+                    border:
+                      "1px solid #ccc",
                     padding: "25px",
                     marginTop: "20px",
-                    borderRadius: "8px",
-                    maxWidth: "600px"
+                    borderRadius:
+                      "8px",
+                    maxWidth:
+                      "600px"
                   }}
                 >
-
                   <h3>
-                    Edit Resume
+                    Create Resume
                   </h3>
 
                   <div
                     style={{
-                      marginBottom: "15px"
+                      marginBottom:
+                        "15px"
                     }}
                   >
-
                     <label>
-                      <b>Education</b>
+                      <b>
+                        Education
+                      </b>
                     </label>
 
                     <input
                       type="text"
-                      value={education}
-                      onChange={(e) =>
-                        setEducation(e.target.value)
+                      value={
+                        education
                       }
+                      onChange={(e) =>
+                        setEducation(
+                          e.target.value
+                        )
+                      }
+                      placeholder="Enter education"
                       style={{
                         width: "100%",
-                        padding: "10px",
-                        marginTop: "5px",
-                        boxSizing: "border-box"
+                        padding:
+                          "10px",
+                        marginTop:
+                          "5px",
+                        boxSizing:
+                          "border-box"
                       }}
                     />
-
                   </div>
 
                   <div
                     style={{
-                      marginBottom: "15px"
+                      marginBottom:
+                        "15px"
                     }}
                   >
-
                     <label>
-                      <b>Skills</b>
+                      <b>
+                        Skills
+                      </b>
                     </label>
 
                     <input
                       type="text"
                       value={skills}
                       onChange={(e) =>
-                        setSkills(e.target.value)
+                        setSkills(
+                          e.target.value
+                        )
                       }
+                      placeholder="Enter skills"
                       style={{
                         width: "100%",
-                        padding: "10px",
-                        marginTop: "5px",
-                        boxSizing: "border-box"
+                        padding:
+                          "10px",
+                        marginTop:
+                          "5px",
+                        boxSizing:
+                          "border-box"
                       }}
                     />
-
                   </div>
 
                   <div
                     style={{
-                      marginBottom: "20px"
+                      marginBottom:
+                        "20px"
                     }}
                   >
-
                     <label>
-                      <b>Experience</b>
+                      <b>
+                        Experience
+                      </b>
                     </label>
 
                     <input
                       type="text"
-                      value={experience}
-                      onChange={(e) =>
-                        setExperience(e.target.value)
+                      value={
+                        experience
                       }
+                      onChange={(e) =>
+                        setExperience(
+                          e.target.value
+                        )
+                      }
+                      placeholder="Enter experience"
                       style={{
                         width: "100%",
-                        padding: "10px",
-                        marginTop: "5px",
-                        boxSizing: "border-box"
+                        padding:
+                          "10px",
+                        marginTop:
+                          "5px",
+                        boxSizing:
+                          "border-box"
                       }}
                     />
-
                   </div>
 
                   <button
-                    onClick={updateResume}
+                    onClick={
+                      createResume
+                    }
                     style={{
-                      backgroundColor: "#198754",
+                      backgroundColor:
+                        "#198754",
                       color: "white",
                       border: "none",
-                      padding: "10px 18px",
-                      borderRadius: "6px",
-                      cursor: "pointer",
-                      marginRight: "10px"
+                      padding:
+                        "10px 18px",
+                      borderRadius:
+                        "6px",
+                      cursor:
+                        "pointer",
+                      fontWeight:
+                        "bold",
+                      marginRight:
+                        "10px"
+                    }}
+                  >
+                    Save Resume
+                  </button>
+
+                  <button
+                    onClick={() =>
+                      setCreateMode(
+                        false
+                      )
+                    }
+                    style={{
+                      padding:
+                        "10px 18px",
+                      borderRadius:
+                        "6px",
+                      cursor:
+                        "pointer"
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              );
+            }
+
+            if (editMode) {
+              return (
+                <div
+                  style={{
+                    border:
+                      "1px solid #ccc",
+                    padding: "25px",
+                    marginTop: "20px",
+                    borderRadius:
+                      "8px",
+                    maxWidth:
+                      "600px"
+                  }}
+                >
+                  <h3>
+                    Edit Resume
+                  </h3>
+
+                  <div
+                    style={{
+                      marginBottom:
+                        "15px"
+                    }}
+                  >
+                    <label>
+                      <b>
+                        Education
+                      </b>
+                    </label>
+
+                    <input
+                      type="text"
+                      value={
+                        education
+                      }
+                      onChange={(e) =>
+                        setEducation(
+                          e.target.value
+                        )
+                      }
+                      style={{
+                        width: "100%",
+                        padding:
+                          "10px",
+                        marginTop:
+                          "5px",
+                        boxSizing:
+                          "border-box"
+                      }}
+                    />
+                  </div>
+
+                  <div
+                    style={{
+                      marginBottom:
+                        "15px"
+                    }}
+                  >
+                    <label>
+                      <b>
+                        Skills
+                      </b>
+                    </label>
+
+                    <input
+                      type="text"
+                      value={skills}
+                      onChange={(e) =>
+                        setSkills(
+                          e.target.value
+                        )
+                      }
+                      style={{
+                        width: "100%",
+                        padding:
+                          "10px",
+                        marginTop:
+                          "5px",
+                        boxSizing:
+                          "border-box"
+                      }}
+                    />
+                  </div>
+
+                  <div
+                    style={{
+                      marginBottom:
+                        "20px"
+                    }}
+                  >
+                    <label>
+                      <b>
+                        Experience
+                      </b>
+                    </label>
+
+                    <input
+                      type="text"
+                      value={
+                        experience
+                      }
+                      onChange={(e) =>
+                        setExperience(
+                          e.target.value
+                        )
+                      }
+                      style={{
+                        width: "100%",
+                        padding:
+                          "10px",
+                        marginTop:
+                          "5px",
+                        boxSizing:
+                          "border-box"
+                      }}
+                    />
+                  </div>
+
+                  <button
+                    onClick={
+                      updateResume
+                    }
+                    style={{
+                      backgroundColor:
+                        "#198754",
+                      color: "white",
+                      border: "none",
+                      padding:
+                        "10px 18px",
+                      borderRadius:
+                        "6px",
+                      cursor:
+                        "pointer",
+                      marginRight:
+                        "10px"
                     }}
                   >
                     Update Resume
                   </button>
 
                   <button
-                    onClick={() => setEditMode(false)}
+                    onClick={() =>
+                      setEditMode(
+                        false
+                      )
+                    }
                     style={{
-                      padding: "10px 18px",
-                      borderRadius: "6px",
-                      cursor: "pointer"
+                      padding:
+                        "10px 18px",
+                      borderRadius:
+                        "6px",
+                      cursor:
+                        "pointer"
                     }}
                   >
                     Cancel
                   </button>
-
                 </div>
-
               );
-
             }
 
             return (
-
               <div
                 style={{
-                  border: "1px solid #ccc",
+                  border:
+                    "1px solid #ccc",
                   padding: "25px",
                   marginTop: "20px",
-                  borderRadius: "8px"
+                  borderRadius:
+                    "8px"
                 }}
               >
-
                 <h3>
                   {user.name}
                 </h3>
@@ -944,51 +1126,70 @@ const createResume = async () => {
                 <hr />
 
                 <p>
-                  <b>Resume ID:</b>{" "}
-                  {resume.resumeID}
+                  <b>
+                    Resume ID:
+                  </b>{" "}
+                  {getResumeId(resume)}
                 </p>
 
                 <p>
-                  <b>Education:</b>{" "}
+                  <b>
+                    Education:
+                  </b>{" "}
                   {resume.education}
                 </p>
 
                 <p>
-                  <b>Skills:</b>{" "}
+                  <b>
+                    Skills:
+                  </b>{" "}
                   {resume.skills}
                 </p>
 
                 <p>
-                  <b>Experience:</b>{" "}
+                  <b>
+                    Experience:
+                  </b>{" "}
                   {resume.experience}
                 </p>
 
                 <p>
-                  <b>Resume File:</b>{" "}
-                 {resume.filePath ? (
-  <a
-    href={`https://job-portal-with-employer-dashboard-production.up.railway.app${resume.filePath}`}
-    target="_blank"
-    rel="noreferrer"
-  >
-    View Resume 📄
-  </a>
-) : (
-  "No file uploaded"
-)}
+                  <b>
+                    Resume File:
+                  </b>{" "}
+
+                  {resume.filePath ? (
+                    <a
+                      href={`${API}${resume.filePath}`}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      View Resume 📄
+                    </a>
+                  ) : (
+                    "No file uploaded"
+                  )}
                 </p>
 
                 <button
-                  onClick={startEditResume}
+                  onClick={
+                    startEditResume
+                  }
                   style={{
-                    backgroundColor: "#0d6efd",
+                    backgroundColor:
+                      "#0d6efd",
                     color: "white",
                     border: "none",
-                    padding: "10px 18px",
-                    borderRadius: "6px",
-                    cursor: "pointer",
-                    fontWeight: "bold",
-                    marginRight: "10px"
+                    padding:
+                      "10px 18px",
+                    borderRadius:
+                      "6px",
+                    cursor:
+                      "pointer",
+                    fontWeight:
+                      "bold",
+                    marginRight:
+                      "10px"
                   }}
                 >
                   Edit Resume
@@ -996,12 +1197,14 @@ const createResume = async () => {
 
                 <div
                   style={{
-                    marginTop: "20px",
-                    paddingTop: "20px",
-                    borderTop: "1px solid #ddd"
+                    marginTop:
+                      "20px",
+                    paddingTop:
+                      "20px",
+                    borderTop:
+                      "1px solid #ddd"
                   }}
                 >
-
                   <h3>
                     Upload Resume PDF
                   </h3>
@@ -1009,49 +1212,58 @@ const createResume = async () => {
                   <input
                     type="file"
                     accept=".pdf,application/pdf"
-                    onChange={handleFileChange}
+                    onChange={
+                      handleFileChange
+                    }
                   />
 
                   {selectedFile && (
                     <p>
-                      <b>Selected File:</b>{" "}
-                      {selectedFile.name}
+                      <b>
+                        Selected File:
+                      </b>{" "}
+                      {
+                        selectedFile.name
+                      }
                     </p>
                   )}
 
                   <button
-                    onClick={uploadResume}
-                    disabled={uploading}
+                    onClick={
+                      uploadResume
+                    }
+                    disabled={
+                      uploading
+                    }
                     style={{
-                      backgroundColor: "#6f42c1",
+                      backgroundColor:
+                        "#6f42c1",
                       color: "white",
                       border: "none",
-                      padding: "10px 18px",
-                      borderRadius: "6px",
-                      cursor: uploading
-                        ? "not-allowed"
-                        : "pointer",
-                      fontWeight: "bold",
-                      marginTop: "10px"
+                      padding:
+                        "10px 18px",
+                      borderRadius:
+                        "6px",
+                      cursor:
+                        uploading
+                          ? "not-allowed"
+                          : "pointer",
+                      fontWeight:
+                        "bold",
+                      marginTop:
+                        "10px"
                     }}
                   >
                     {uploading
                       ? "Uploading..."
                       : "Upload Resume"}
                   </button>
-
                 </div>
-
               </div>
-
             );
-
           })()}
-
         </div>
-
       )}
-
     </div>
   );
 }
