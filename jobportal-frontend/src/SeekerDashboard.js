@@ -24,7 +24,7 @@ function SeekerDashboard() {
 
   const email = localStorage.getItem("email");
 
-  const API = "http://localhost:8081";
+ const API = "https://job-portal-with-employer-dashboard-production.up.railway.app";
 
   useEffect(() => {
     fetchData();

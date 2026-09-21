@@ -2,6 +2,8 @@ import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import Login from "./Login";
+import ForgotPassword from "./ForgotPassword";
+
 import AdminDashboard from "./AdminDashboard";
 import EmployerDashboard from "./EmployerDashboard";
 import SeekerDashboard from "./SeekerDashboard";
@@ -19,6 +21,7 @@ function App() {
 
         {/* Login */}
         <Route path="/" element={<Login />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
 
         {/* Admin */}
         <Route path="/admin-dashboard" element={<AdminDashboard />} />

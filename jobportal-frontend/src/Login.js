@@ -20,26 +20,23 @@ function Login() {
 
     try {
       const res = await axios.post(
-  "http://localhost:8081/api/users/login",
-  {
-    email: email,
-    password: password
-  }
-);
+        "https://job-portal-with-employer-dashboard-production.up.railway.app/api/users/login",
+        {
+          email: email,
+          password: password
+        }
+      );
 
       console.log("Backend response:", res.data);
 
       if (res.data.success) {
 
-        // Get role from backend
         const role = res.data.role.toUpperCase();
 
-        // Save login information
         localStorage.setItem("email", email);
         localStorage.setItem("role", role);
         localStorage.setItem("isLoggedIn", "true");
 
-        // Role based navigation
         if (role === "ADMIN") {
           navigate("/admin-dashboard");
         }
@@ -77,18 +74,18 @@ function Login() {
 
       <div className="login-container">
 
-        {/* Left Side */}
         <div className="login-left">
           <div className="overlay">
             <h1>Job Portal</h1>
+
             <p>
-              Find your dream job.<br />
+              Find your dream job.
+              <br />
               Build your career.
             </p>
           </div>
         </div>
 
-        {/* Right Side */}
         <div className="login-right">
 
           <div className="login-box">
@@ -102,6 +99,7 @@ function Login() {
             <form onSubmit={handleSubmit}>
 
               <div className="input-group">
+
                 <span>👤</span>
 
                 <input
@@ -110,9 +108,11 @@ function Login() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
+
               </div>
 
               <div className="input-group">
+
                 <span>🔒</span>
 
                 <input
@@ -121,9 +121,13 @@ function Login() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
+
               </div>
 
-              <div className="forgot-password">
+              <div
+                className="forgot-password"
+                onClick={() => navigate("/forgot-password")}
+              >
                 Forgot your password?
               </div>
 
