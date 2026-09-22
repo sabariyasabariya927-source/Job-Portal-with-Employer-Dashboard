@@ -1,14 +1,9 @@
 # Maven
-**/target/
+backend/target/
 
 # Node
-**/node_modules/
-
-# React build
-**/build/
-
-# Uploads
-**/uploads/
+node_modules/
+jobportal-frontend/node_modules/
 
 # Environment
 .env
@@ -24,3 +19,6 @@
 # OS
 .DS_Store
 Thumbs.db
+
+# Uploaded files
+backend/uploads/
