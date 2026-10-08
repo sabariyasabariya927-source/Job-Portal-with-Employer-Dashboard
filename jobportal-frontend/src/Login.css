@@ -119,6 +119,49 @@ body {
   color: #aaa;
 }
 
+/* PASSWORD */
+
+.password-container {
+  position: relative;
+  width: 100%;
+  margin-bottom: 18px;
+}
+
+.password-container input {
+  width: 100%;
+  height: 50px;
+  padding: 0 70px 0 15px;
+  border: 1px solid #ddd;
+  border-radius: 25px;
+  outline: none;
+  font-size: 14px;
+}
+
+.password-container input:focus {
+  border-color: #2fcbbd;
+}
+
+.password-container input::placeholder {
+  color: #aaa;
+}
+
+.show-password-btn {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: transparent;
+  color: #2fcbbd;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 5px;
+}
+
+.show-password-btn:hover {
+  color: #20b2a5;
+}
+
 /* FORGOT */
 
 .forgot-password {

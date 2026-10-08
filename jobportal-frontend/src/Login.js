@@ -7,6 +7,7 @@ function Login() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const navigate = useNavigate();
 
@@ -19,9 +20,10 @@ function Login() {
     }
 
     try {
+
       const res = await axios.post(
-        "https://job-portal-with-employer-dashboard-production.up.railway.app/api/users/login",
-        {
+"http://localhost:8081/api/users/login" ,       
+{
           email: email,
           password: password
         }
@@ -51,7 +53,11 @@ function Login() {
         }
 
       } else {
-        alert(res.data.message);
+
+        alert(
+          res.data.message || "Login failed"
+        );
+
       }
 
     } catch (error) {
@@ -59,12 +65,19 @@ function Login() {
       console.error("Login error:", error);
 
       if (error.response) {
+
         alert(
           "Login failed: " +
-          (error.response.data.message || "Invalid email or password")
+          (
+            error.response.data.message ||
+            "Invalid email or password"
+          )
         );
+
       } else {
+
         alert("Backend connection failed");
+
       }
     }
   };
@@ -74,17 +87,24 @@ function Login() {
 
       <div className="login-container">
 
+        {/* LEFT SIDE */}
+
         <div className="login-left">
+
           <div className="overlay">
+
             <h1>Job Portal</h1>
 
             <p>
-              Find your dream job.
-              <br />
-              Build your career.
+              Find your dream job and connect
+              with the right opportunities.
             </p>
+
           </div>
+
         </div>
+
+        {/* RIGHT SIDE */}
 
         <div className="login-right">
 
@@ -98,38 +118,64 @@ function Login() {
 
             <form onSubmit={handleSubmit}>
 
+              {/* EMAIL */}
+
               <div className="input-group">
 
                 <span>👤</span>
 
                 <input
                   type="email"
-                  placeholder="Email Address"
+                  placeholder="Enter Email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  required
                 />
 
               </div>
 
-              <div className="input-group">
+              {/* PASSWORD */}
 
-                <span>🔒</span>
+              <div className="password-container">
 
                 <input
-                  type="password"
-                  placeholder="Password"
+                  type={
+                    showPassword
+                      ? "text"
+                      : "password"
+                  }
+                  placeholder="Enter Password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) =>
+                    setPassword(e.target.value)
+                  }
+                  required
                 />
 
+                <button
+                  type="button"
+                  className="show-password-btn"
+                  onClick={() =>
+                    setShowPassword(!showPassword)
+                  }
+                >
+                  {showPassword ? "Hide" : "Show"}
+                </button>
+
               </div>
+
+              {/* FORGOT PASSWORD */}
 
               <div
                 className="forgot-password"
-                onClick={() => navigate("/forgot-password")}
+                onClick={() =>
+                  navigate("/forgot-password")
+                }
               >
                 Forgot your password?
               </div>
+
+              {/* LOGIN BUTTON */}
 
               <button
                 type="submit"
@@ -140,15 +186,32 @@ function Login() {
 
             </form>
 
+            {/* SIGN UP */}
+
             <p className="signup-text">
+
               Don't have an account?
-              <span> Sign up!</span>
+
+              <span
+                onClick={() =>
+                  navigate("/register")
+                }
+              >
+                {" "}Sign up!
+              </span>
+
             </p>
 
+            {/* SOCIAL ICONS */}
+
             <div className="social-icons">
+
               <span>f</span>
-              <span>𝕏</span>
+
+              <span>♥</span>
+
               <span>in</span>
+
             </div>
 
           </div>

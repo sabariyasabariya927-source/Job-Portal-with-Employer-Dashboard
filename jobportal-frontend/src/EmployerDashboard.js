@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
+const API = "http://localhost:8081";
+
 function EmployerDashboard() {
   const [jobs, setJobs] = useState([]);
   const [applications, setApplications] = useState([]);
@@ -22,46 +24,50 @@ function EmployerDashboard() {
   const loadData = async () => {
     try {
       const jobsResponse = await axios.get(
-        "https://job-portal-with-employer-dashboard-production.up.railway.app/api/jobs"
+        `${API}/api/jobs`
       );
 
       const applicationsResponse = await axios.get(
-        "https://job-portal-with-employer-dashboard-production.up.railway.app/api/applications"
+        `${API}/api/applications`
       );
 
       const usersResponse = await axios.get(
-        "https://job-portal-with-employer-dashboard-production.up.railway.app/api/users"
+        `${API}/api/users`
       );
 
       const resumesResponse = await axios.get(
-        "https://job-portal-with-employer-dashboard-production.up.railway.app/api/resumes"
+        `${API}/api/resumes`
       );
 
       setJobs(jobsResponse.data);
       setApplications(applicationsResponse.data);
       setUsers(usersResponse.data);
       setResumes(resumesResponse.data);
-
     } catch (error) {
       console.error("Error loading dashboard:", error);
     }
   };
 
   const getJobTitle = (jobID) => {
-    const job = jobs.find((job) => job.jobID === jobID);
+    const job = jobs.find(
+      (job) => String(job.jobID) === String(jobID)
+    );
 
     return job ? job.title : "Unknown Job";
   };
 
   const getApplicantName = (seekerID) => {
-    const user = users.find((user) => user.id === seekerID);
+    const user = users.find(
+      (user) => String(user.id) === String(seekerID)
+    );
 
     return user ? user.name : "Unknown Applicant";
   };
 
   const getResume = (seekerID) => {
     return resumes.find(
-      (resume) => resume.seekerID === seekerID
+      (resume) =>
+        String(resume.seekerID) === String(seekerID)
     );
   };
 
@@ -88,17 +94,26 @@ function EmployerDashboard() {
       const newJob = {
         employerID: 1,
         categoryID: 1,
-        title: title,
-        description: description,
-        location: location,
+        title: title.trim(),
+        description: description.trim(),
+        location: location.trim(),
         salary: Number(salary),
         jobType: jobType
       };
 
-      await axios.post(
-        "https://job-portal-with-employer-dashboard-production.up.railway.app/api/jobs/add",
-        newJob
+      console.log("Posting job:", newJob);
+
+      const response = await axios.post(
+        `${API}/api/jobs/add`,
+        newJob,
+        {
+          headers: {
+            "Content-Type": "application/json"
+          }
+        }
       );
+
+      console.log("Job response:", response.data);
 
       alert("Job Posted Successfully!");
 
@@ -110,18 +125,39 @@ function EmployerDashboard() {
 
       setShowForm(false);
 
-      loadData();
+      await loadData();
 
     } catch (error) {
       console.error("Error posting job:", error);
-      alert("Job posting failed!");
+
+      if (error.response) {
+        console.error("Status:", error.response.status);
+        console.error("Data:", error.response.data);
+
+        alert(
+          "Job posting failed!\n\nBackend Error:\n" +
+          JSON.stringify(error.response.data)
+        );
+      } else if (error.request) {
+        alert(
+          "Job posting failed!\n\nBackend is not reachable.\nMake sure Spring Boot is running on port 8081."
+        );
+      } else {
+        alert(
+          "Job posting failed!\n\n" +
+          error.message
+        );
+      }
     }
   };
 
-  const handleStatusChange = async (applicationID, status) => {
+  const handleStatusChange = async (
+    applicationID,
+    status
+  ) => {
     try {
       await axios.patch(
-        `https://job-portal-with-employer-dashboard-production.up.railway.app/api/applications/${applicationID}/status`,
+        `${API}/api/applications/${applicationID}/status`,
         status,
         {
           headers: {
@@ -132,11 +168,19 @@ function EmployerDashboard() {
 
       alert("Status updated successfully!");
 
-      loadData();
+      await loadData();
 
     } catch (error) {
       console.error("Status update error:", error);
-      alert("Status update failed!");
+
+      if (error.response) {
+        alert(
+          "Status update failed!\n\n" +
+          JSON.stringify(error.response.data)
+        );
+      } else {
+        alert("Status update failed!");
+      }
     }
   };
 
@@ -156,8 +200,6 @@ function EmployerDashboard() {
       }}
     >
 
-      {/* Header */}
-
       <div
         style={{
           backgroundColor: "#17232d",
@@ -168,9 +210,7 @@ function EmployerDashboard() {
           alignItems: "center"
         }}
       >
-
         <div>
-
           <h1 style={{ margin: 0 }}>
             💼 JobPortal
           </h1>
@@ -183,7 +223,6 @@ function EmployerDashboard() {
           >
             Employer Dashboard
           </p>
-
         </div>
 
         <button
@@ -200,14 +239,9 @@ function EmployerDashboard() {
         >
           Logout
         </button>
-
       </div>
 
-      {/* Main Content */}
-
       <div style={{ padding: "30px" }}>
-
-        {/* Welcome */}
 
         <div
           style={{
@@ -216,7 +250,6 @@ function EmployerDashboard() {
             alignItems: "center"
           }}
         >
-
           <h2>
             Welcome Employer 👋
           </h2>
@@ -235,13 +268,9 @@ function EmployerDashboard() {
           >
             + Post New Job
           </button>
-
         </div>
 
-        {/* Post Job Form */}
-
         {showForm && (
-
           <div
             style={{
               backgroundColor: "white",
@@ -251,7 +280,6 @@ function EmployerDashboard() {
               boxShadow: "0 2px 8px rgba(0,0,0,0.1)"
             }}
           >
-
             <h2>
               📝 Post New Job
             </h2>
@@ -262,7 +290,9 @@ function EmployerDashboard() {
                 type="text"
                 placeholder="Job Title"
                 value={title}
-                onChange={(e) => setTitle(e.target.value)}
+                onChange={(e) =>
+                  setTitle(e.target.value)
+                }
                 required
                 style={inputStyle}
               />
@@ -270,7 +300,9 @@ function EmployerDashboard() {
               <textarea
                 placeholder="Job Description"
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={(e) =>
+                  setDescription(e.target.value)
+                }
                 required
                 style={{
                   ...inputStyle,
@@ -282,7 +314,9 @@ function EmployerDashboard() {
                 type="text"
                 placeholder="Location"
                 value={location}
-                onChange={(e) => setLocation(e.target.value)}
+                onChange={(e) =>
+                  setLocation(e.target.value)
+                }
                 required
                 style={inputStyle}
               />
@@ -291,18 +325,21 @@ function EmployerDashboard() {
                 type="number"
                 placeholder="Salary"
                 value={salary}
-                onChange={(e) => setSalary(e.target.value)}
+                onChange={(e) =>
+                  setSalary(e.target.value)
+                }
                 required
                 style={inputStyle}
               />
 
               <select
                 value={jobType}
-                onChange={(e) => setJobType(e.target.value)}
+                onChange={(e) =>
+                  setJobType(e.target.value)
+                }
                 required
                 style={inputStyle}
               >
-
                 <option value="">
                   Select Job Type
                 </option>
@@ -322,7 +359,6 @@ function EmployerDashboard() {
                 <option value="Contract">
                   Contract
                 </option>
-
               </select>
 
               <button
@@ -343,7 +379,9 @@ function EmployerDashboard() {
 
               <button
                 type="button"
-                onClick={() => setShowForm(false)}
+                onClick={() =>
+                  setShowForm(false)
+                }
                 style={{
                   backgroundColor: "#6c757d",
                   color: "white",
@@ -357,17 +395,14 @@ function EmployerDashboard() {
               </button>
 
             </form>
-
           </div>
-
         )}
-
-        {/* Statistics */}
 
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(4, 1fr)",
+            gridTemplateColumns:
+              "repeat(4, 1fr)",
             gap: "20px",
             marginTop: "25px"
           }}
@@ -385,17 +420,19 @@ function EmployerDashboard() {
 
           <div style={cardStyle}>
             <h3>Applied</h3>
-            <h1>{getStatusCount("Applied")}</h1>
+            <h1>
+              {getStatusCount("Applied")}
+            </h1>
           </div>
 
           <div style={cardStyle}>
             <h3>Under Review</h3>
-            <h1>{getStatusCount("Under Review")}</h1>
+            <h1>
+              {getStatusCount("Under Review")}
+            </h1>
           </div>
 
         </div>
-
-        {/* Posted Jobs */}
 
         <div style={sectionStyle}>
 
@@ -406,42 +443,31 @@ function EmployerDashboard() {
           <table style={tableStyle}>
 
             <thead>
-
               <tr
                 style={{
                   backgroundColor: "#17232d",
                   color: "white"
                 }}
               >
-
-                <th style={thStyle}>
-                  ID
-                </th>
-
+                <th style={thStyle}>ID</th>
                 <th style={thStyle}>
                   Job Title
                 </th>
-
                 <th style={thStyle}>
                   Location
                 </th>
-
                 <th style={thStyle}>
                   Salary
                 </th>
-
                 <th style={thStyle}>
                   Job Type
                 </th>
-
               </tr>
-
             </thead>
 
             <tbody>
 
               {jobs.map((job) => (
-
                 <tr key={job.jobID}>
 
                   <td style={tdStyle}>
@@ -461,11 +487,11 @@ function EmployerDashboard() {
                   </td>
 
                   <td style={tdStyle}>
-                    {job.jobType || "Not Specified"}
+                    {job.jobType ||
+                      "Not Specified"}
                   </td>
 
                 </tr>
-
               ))}
 
             </tbody>
@@ -473,8 +499,6 @@ function EmployerDashboard() {
           </table>
 
         </div>
-
-        {/* Applications */}
 
         <div style={sectionStyle}>
 
@@ -519,92 +543,108 @@ function EmployerDashboard() {
 
             <tbody>
 
-              {applications.map((application) => (
+              {applications.map(
+                (application) => (
 
-                <tr key={application.applicationID}>
+                  <tr
+                    key={
+                      application.applicationID
+                    }
+                  >
 
-                  <td style={tdStyle}>
-                    {application.applicationID}
-                  </td>
-
-                  <td style={tdStyle}>
-                    {getJobTitle(application.jobID)}
-                  </td>
-
-                  <td style={tdStyle}>
-                    {getApplicantName(application.seekerID)}
-                  </td>
-
-                  <td style={tdStyle}>
-
-                    <select
-                      value={application.status}
-                      onChange={(e) =>
-                        handleStatusChange(
-                          application.applicationID,
-                          e.target.value
-                        )
+                    <td style={tdStyle}>
+                      {
+                        application.applicationID
                       }
-                      style={{
-                        padding: "8px",
-                        borderRadius: "5px",
-                        border: "1px solid #ccc",
-                        cursor: "pointer"
-                      }}
-                    >
+                    </td>
 
-                      <option value="Applied">
-                        Applied
-                      </option>
+                    <td style={tdStyle}>
+                      {getJobTitle(
+                        application.jobID
+                      )}
+                    </td>
 
-                      <option value="Under Review">
-                        Under Review
-                      </option>
+                    <td style={tdStyle}>
+                      {getApplicantName(
+                        application.seekerID
+                      )}
+                    </td>
 
-                      <option value="Selected">
-                        Selected
-                      </option>
+                    <td style={tdStyle}>
 
-                      <option value="Rejected">
-                        Rejected
-                      </option>
+                      <select
+                        value={
+                          application.status
+                        }
+                        onChange={(e) =>
+                          handleStatusChange(
+                            application.applicationID,
+                            e.target.value
+                          )
+                        }
+                        style={{
+                          padding: "8px",
+                          borderRadius: "5px",
+                          border:
+                            "1px solid #ccc",
+                          cursor: "pointer"
+                        }}
+                      >
 
-                    </select>
+                        <option value="Applied">
+                          Applied
+                        </option>
 
-                  </td>
+                        <option value="Under Review">
+                          Under Review
+                        </option>
 
-                  <td style={tdStyle}>
+                        <option value="Selected">
+                          Selected
+                        </option>
 
-                    <button
-                      onClick={() =>
-                        viewResume(application.seekerID)
-                      }
-                      style={{
-                        backgroundColor: "#0d6efd",
-                        color: "white",
-                        border: "none",
-                        padding: "8px 14px",
-                        borderRadius: "5px",
-                        cursor: "pointer",
-                        fontWeight: "bold"
-                      }}
-                    >
-                      View Resume
-                    </button>
+                        <option value="Rejected">
+                          Rejected
+                        </option>
 
-                  </td>
+                      </select>
 
-                </tr>
+                    </td>
 
-              ))}
+                    <td style={tdStyle}>
+
+                      <button
+                        onClick={() =>
+                          viewResume(
+                            application.seekerID
+                          )
+                        }
+                        style={{
+                          backgroundColor:
+                            "#0d6efd",
+                          color: "white",
+                          border: "none",
+                          padding:
+                            "8px 14px",
+                          borderRadius: "5px",
+                          cursor: "pointer",
+                          fontWeight: "bold"
+                        }}
+                      >
+                        View Resume
+                      </button>
+
+                    </td>
+
+                  </tr>
+                )
+              )}
 
             </tbody>
 
           </table>
 
         </div>
-
-        {/* Resume Popup */}
 
         {selectedResume && (
 
@@ -615,7 +655,8 @@ function EmployerDashboard() {
               left: 0,
               width: "100%",
               height: "100%",
-              backgroundColor: "rgba(0,0,0,0.5)",
+              backgroundColor:
+                "rgba(0,0,0,0.5)",
               display: "flex",
               justifyContent: "center",
               alignItems: "center"
@@ -628,7 +669,8 @@ function EmployerDashboard() {
                 width: "500px",
                 padding: "30px",
                 borderRadius: "12px",
-                boxShadow: "0 4px 15px rgba(0,0,0,0.3)"
+                boxShadow:
+                  "0 4px 15px rgba(0,0,0,0.3)"
               }}
             >
 
@@ -637,42 +679,60 @@ function EmployerDashboard() {
               </h2>
 
               <p>
-                <strong>Applicant:</strong>{" "}
-                {getApplicantName(selectedResume.seekerID)}
+                <strong>
+                  Applicant:
+                </strong>{" "}
+                {getApplicantName(
+                  selectedResume.seekerID
+                )}
               </p>
 
               <p>
-                <strong>Education:</strong>{" "}
+                <strong>
+                  Education:
+                </strong>{" "}
                 {selectedResume.education}
               </p>
 
               <p>
-                <strong>Skills:</strong>{" "}
+                <strong>
+                  Skills:
+                </strong>{" "}
                 {selectedResume.skills}
               </p>
 
               <p>
-                <strong>Experience:</strong>{" "}
+                <strong>
+                  Experience:
+                </strong>{" "}
                 {selectedResume.experience}
               </p>
 
-             <p>
-  <strong>Resume File:</strong>{" "}
+              <p>
+                <strong>
+                  Resume File:
+                </strong>{" "}
 
-  {selectedResume.filePath ? (
-    <a
-      href={`https://job-portal-with-employer-dashboard-production.up.railway.app${selectedResume.filePath}`}
-      target="_blank"
-      rel="noreferrer"
-    >
-      View Resume 📄
-    </a>
-  ) : (
-    "No file uploaded"
-  )}
-</p>
+                {selectedResume.filePath ? (
+
+                  <a
+                    href={`${API}${selectedResume.filePath}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    View Resume 📄
+                  </a>
+
+                ) : (
+                  "No file uploaded"
+                )}
+
+              </p>
+
               <button
-                onClick={() => setSelectedResume(null)}
+                onClick={() =>
+                  setSelectedResume(null)
+                }
                 style={{
                   backgroundColor: "#dc3545",
                   color: "white",
@@ -712,7 +772,8 @@ const cardStyle = {
   backgroundColor: "white",
   padding: "25px",
   borderRadius: "10px",
-  boxShadow: "0 2px 8px rgba(0,0,0,0.1)"
+  boxShadow:
+    "0 2px 8px rgba(0,0,0,0.1)"
 };
 
 const sectionStyle = {
@@ -720,7 +781,8 @@ const sectionStyle = {
   marginTop: "30px",
   padding: "25px",
   borderRadius: "10px",
-  boxShadow: "0 2px 8px rgba(0,0,0,0.1)"
+  boxShadow:
+    "0 2px 8px rgba(0,0,0,0.1)"
 };
 
 const tableStyle = {
@@ -736,7 +798,8 @@ const thStyle = {
 
 const tdStyle = {
   padding: "12px",
-  borderBottom: "1px solid #ddd"
+  borderBottom:
+    "1px solid #ddd"
 };
 
 export default EmployerDashboard;

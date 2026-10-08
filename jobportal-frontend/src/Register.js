@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import "./Register.css";
 
 function Register() {
 
@@ -9,14 +10,19 @@ function Register() {
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [role, setRole] = useState("jobseeker");
+    const [role, setRole] = useState("JOBSEEKER");
 
     const handleRegister = async (e) => {
         e.preventDefault();
 
+        if (!name || !email || !password) {
+            alert("Please fill all fields");
+            return;
+        }
+
         try {
 
-            const response = await axios.post(
+            const res = await axios.post(
                 "https://job-portal-with-employer-dashboard-production.up.railway.app/api/users/register",
                 {
                     name: name,
@@ -26,19 +32,35 @@ function Register() {
                 }
             );
 
-            alert("Registration successful!");
+            if (res.data.success) {
 
-            navigate("/login");
+                alert(
+                    "Registration successful!\n\nPlease check your email and click the verification link."
+                );
+
+                navigate("/login");
+
+            } else {
+
+                alert(
+                    res.data.message || "Registration failed"
+                );
+            }
 
         } catch (error) {
 
+            console.error("Registration error:", error);
+
             if (error.response) {
+
                 alert(
                     error.response.data.message ||
                     "Registration failed"
                 );
+
             } else {
-                alert("Backend server is not running");
+
+                alert("Backend connection failed");
             }
         }
     };
@@ -80,11 +102,11 @@ function Register() {
                         value={role}
                         onChange={(e) => setRole(e.target.value)}
                     >
-                        <option value="jobseeker">
+                        <option value="JOBSEEKER">
                             Job Seeker
                         </option>
 
-                        <option value="employer">
+                        <option value="EMPLOYER">
                             Employer
                         </option>
                     </select>
@@ -97,6 +119,7 @@ function Register() {
 
                 <p>
                     Already have an account?
+
                     <button
                         className="link-button"
                         onClick={() => navigate("/login")}

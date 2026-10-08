@@ -28,6 +28,12 @@ public class User {
     @Column(name = "Role")
     private String role;
 
+    @Column(name = "is_verified", nullable = false)
+    private boolean verified = false;
+
+    @Column(name = "verification_token")
+    private String verificationToken;
+
     public Integer getId() {
         return id;
     }
@@ -66,5 +72,21 @@ public class User {
 
     public void setRole(String role) {
         this.role = role;
+    }
+
+    public boolean isVerified() {
+        return verified;
+    }
+
+    public void setVerified(boolean verified) {
+        this.verified = verified;
+    }
+
+    public String getVerificationToken() {
+        return verificationToken;
+    }
+
+    public void setVerificationToken(String verificationToken) {
+        this.verificationToken = verificationToken;
     }
 }

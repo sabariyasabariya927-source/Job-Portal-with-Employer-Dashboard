@@ -2,6 +2,7 @@ import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import Login from "./Login";
+import Register from "./Register";
 import ForgotPassword from "./ForgotPassword";
 
 import AdminDashboard from "./AdminDashboard";
@@ -19,26 +20,51 @@ function App() {
     <BrowserRouter>
       <Routes>
 
-        {/* Login */}
         <Route path="/" element={<Login />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
 
-        {/* Admin */}
-        <Route path="/admin-dashboard" element={<AdminDashboard />} />
+        <Route path="/login" element={<Login />} />
+
+        <Route path="/register" element={<Register />} />
+
+        <Route
+          path="/forgot-password"
+          element={<ForgotPassword />}
+        />
+
+        <Route
+          path="/admin-dashboard"
+          element={<AdminDashboard />}
+        />
+
         <Route path="/users" element={<Users />} />
-        <Route path="/jobs" element={<Jobs />} />
-        <Route path="/applications" element={<Applications />} />
-        <Route path="/companies" element={<Companies />} />
-        <Route path="/reports" element={<Reports />} />
-        <Route path="/settings" element={<Settings />} />
 
-        {/* Employer */}
+        <Route path="/jobs" element={<Jobs />} />
+
+        <Route
+          path="/applications"
+          element={<Applications />}
+        />
+
+        <Route
+          path="/companies"
+          element={<Companies />}
+        />
+
+        <Route
+          path="/reports"
+          element={<Reports />}
+        />
+
+        <Route
+          path="/settings"
+          element={<Settings />}
+        />
+
         <Route
           path="/employer-dashboard"
           element={<EmployerDashboard />}
         />
 
-        {/* Job Seeker */}
         <Route
           path="/seeker-dashboard"
           element={<SeekerDashboard />}
