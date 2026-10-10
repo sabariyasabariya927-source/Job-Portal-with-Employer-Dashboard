@@ -1,6 +1,8 @@
+
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import "./SeekerDashboard.css";
 
 function SeekerDashboard() {
   const navigate = useNavigate();
@@ -24,8 +26,8 @@ function SeekerDashboard() {
 
   const email = localStorage.getItem("email");
 
- const API = "https://job-portal-with-employer-dashboard-production.up.railway.app";
-
+  const API =
+    "http://localhost:8081";
   useEffect(() => {
     fetchData();
   }, []);
@@ -34,96 +36,81 @@ function SeekerDashboard() {
     try {
       setLoading(true);
 
-      const jobsResponse = await axios.get(
-        `${API}/api/jobs`
-      );
-
-      const usersResponse = await axios.get(
-        `${API}/api/users`
-      );
-
-      const resumesResponse = await axios.get(
-        `${API}/api/resumes`
-      );
-
-      const applicationsResponse = await axios.get(
-        `${API}/api/applications`
-      );
-
-      console.log("JOBS:", jobsResponse.data);
-      console.log("USERS:", usersResponse.data);
-      console.log("RESUMES:", resumesResponse.data);
-      console.log("APPLICATIONS:", applicationsResponse.data);
+      const [jobsResponse, usersResponse, resumesResponse, applicationsResponse] =
+        await Promise.all([
+          axios.get(`${API}/api/jobs`),
+          axios.get(`${API}/api/users`),
+          axios.get(`${API}/api/resumes`),
+          axios.get(`${API}/api/applications`)
+        ]);
 
       setJobs(jobsResponse.data || []);
       setUsers(usersResponse.data || []);
       setResumes(resumesResponse.data || []);
       setApplications(applicationsResponse.data || []);
-
-      setLoading(false);
     } catch (error) {
       console.error("Error fetching data:", error);
-
+      alert("Unable to load data. Please check the backend connection.");
+    } finally {
       setLoading(false);
-
-      alert("Unable to load data");
     }
   };
 
   const getUserId = (user) => {
-    if (!user) {
-      return null;
-    }
-
+    if (!user) return null;
     return user.id ?? user.userID ?? user.userId;
   };
 
   const getResumeId = (resume) => {
-    if (!resume) {
-      return null;
-    }
-
+    if (!resume) return null;
     return resume.resumeID ?? resume.resumeId ?? resume.id;
   };
 
   const getCurrentUser = () => {
-    if (!email || !users.length) {
-      return null;
-    }
+    if (!email || !users.length) return null;
 
-    const currentUser = users.find(
-      (user) =>
-        user.email &&
-        String(user.email).trim().toLowerCase() ===
-          String(email).trim().toLowerCase()
+    return (
+      users.find(
+        (user) =>
+          user.email &&
+          String(user.email).trim().toLowerCase() ===
+            String(email).trim().toLowerCase()
+      ) || null
     );
-
-    console.log("CURRENT USER:", currentUser);
-
-    return currentUser || null;
   };
 
   const getCurrentResume = () => {
     const user = getCurrentUser();
-
-    if (!user) {
-      return null;
-    }
+    if (!user) return null;
 
     const userId = getUserId(user);
 
-    console.log("CURRENT USER ID:", userId);
-
-    const currentResume = resumes.find(
-      (resume) =>
-        String(resume.seekerID) === String(userId) ||
-        String(resume.seekerId) === String(userId)
+    return (
+      resumes.find(
+        (resume) =>
+          String(resume.seekerID ?? resume.seekerId) ===
+          String(userId)
+      ) || null
     );
-
-    console.log("CURRENT RESUME:", currentResume);
-
-    return currentResume || null;
   };
+
+  const getMyApplications = () => {
+    const user = getCurrentUser();
+    if (!user) return [];
+
+    const userId = getUserId(user);
+
+    return applications.filter(
+      (application) =>
+        String(application.seekerID ?? application.seekerId) ===
+        String(userId)
+    );
+  };
+
+  const getJob = (jobID) =>
+    jobs.find(
+      (job) => String(job.jobID ?? job.jobId) === String(jobID)
+    );
 
   const applyJob = async (jobID) => {
     try {
@@ -135,7 +122,6 @@ function SeekerDashboard() {
       }
 
       const userId = getUserId(user);
-
       const resume = getCurrentResume();
 
       if (!resume) {
@@ -143,12 +129,12 @@ function SeekerDashboard() {
         return;
       }
 
-      const resumeId = getResumeId(resume);
-
       const alreadyApplied = applications.some(
         (application) =>
-          String(application.jobID) === String(jobID) &&
-          String(application.seekerID) === String(userId)
+          String(application.jobID ?? application.jobId) ===
+            String(jobID) &&
+          String(application.seekerID ?? application.seekerId) ===
+            String(userId)
       );
 
       if (alreadyApplied) {
@@ -157,57 +143,20 @@ function SeekerDashboard() {
       }
 
       const application = {
-        jobID: jobID,
+        jobID,
         seekerID: userId,
-        resumeID: resumeId,
+        resumeID: getResumeId(resume),
         status: "Applied"
       };
 
-      console.log("APPLICATION DATA:", application);
+      await axios.post(`${API}/api/applications/add`, application);
 
-      await axios.post(
-        `${API}/api/applications/add`,
-        application
-      );
-
-      alert("Job Applied Successfully! ✅");
-
-      fetchData();
+      alert("Job Applied Successfully!");
+      await fetchData();
     } catch (error) {
       console.error("Apply Job error:", error);
-
-      if (error.response) {
-        console.error(
-          "Backend response:",
-          error.response.data
-        );
-      }
-
       alert("Job application failed!");
     }
-  };
-
-  const getMyApplications = () => {
-    const user = getCurrentUser();
-
-    if (!user) {
-      return [];
-    }
-
-    const userId = getUserId(user);
-
-    return applications.filter(
-      (application) =>
-        String(application.seekerID) ===
-        String(userId)
-    );
-  };
-
-  const getJob = (jobID) => {
-    return jobs.find(
-      (job) =>
-        String(job.jobID) === String(jobID)
-    );
   };
 
   const createResume = async () => {
@@ -219,29 +168,22 @@ function SeekerDashboard() {
         return;
       }
 
-      const userId = getUserId(user);
-
-      if (!education || !skills || !experience) {
+      if (!education.trim() || !skills.trim() || !experience.trim()) {
         alert("Please fill all resume details!");
         return;
       }
 
       const newResume = {
-        seekerID: userId,
+        seekerID: getUserId(user),
         filePath: null,
-        skills: skills,
-        education: education,
-        experience: experience
+        skills,
+        education,
+        experience
       };
 
-      console.log("NEW RESUME:", newResume);
+      await axios.post(`${API}/api/resumes/add`, newResume);
 
-      await axios.post(
-        `${API}/api/resumes/add`,
-        newResume
-      );
-
-      alert("Resume Created Successfully! ✅");
+      alert("Resume Created Successfully!");
 
       setCreateMode(false);
       setSkills("");
@@ -251,14 +193,6 @@ function SeekerDashboard() {
       await fetchData();
     } catch (error) {
       console.error("Create Resume error:", error);
-
-      if (error.response) {
-        console.error(
-          "Backend response:",
-          error.response.data
-        );
-      }
-
       alert("Resume creation failed!");
     }
   };
@@ -274,7 +208,6 @@ function SeekerDashboard() {
     setSkills(resume.skills || "");
     setEducation(resume.education || "");
     setExperience(resume.experience || "");
-
     setEditMode(true);
   };
 
@@ -287,38 +220,30 @@ function SeekerDashboard() {
         return;
       }
 
-      const resumeId = getResumeId(resume);
+      if (!education.trim() || !skills.trim() || !experience.trim()) {
+        alert("Please fill all resume details!");
+        return;
+      }
 
       const updatedResume = {
-        seekerID: resume.seekerID,
+        seekerID: resume.seekerID ?? resume.seekerId,
         filePath: resume.filePath,
-        skills: skills,
-        education: education,
-        experience: experience
+        skills,
+        education,
+        experience
       };
 
-      console.log("UPDATED RESUME:", updatedResume);
-
       await axios.patch(
-        `${API}/api/resumes/${resumeId}`,
+        `${API}/api/resumes/${getResumeId(resume)}`,
         updatedResume
       );
 
-      alert("Resume Updated Successfully! ✅");
+      alert("Resume Updated Successfully!");
 
       setEditMode(false);
-
       await fetchData();
     } catch (error) {
       console.error("Update Resume error:", error);
-
-      if (error.response) {
-        console.error(
-          "Backend response:",
-          error.response.data
-        );
-      }
-
       alert("Resume update failed!");
     }
   };
@@ -333,11 +258,8 @@ function SeekerDashboard() {
 
     if (file.type !== "application/pdf") {
       alert("Only PDF files are allowed!");
-
       event.target.value = "";
-
       setSelectedFile(null);
-
       return;
     }
 
@@ -358,39 +280,27 @@ function SeekerDashboard() {
         return;
       }
 
-      const resumeId = getResumeId(resume);
-
       const formData = new FormData();
-
       formData.append("file", selectedFile);
 
       setUploading(true);
 
       await axios.post(
-        `${API}/api/resumes/${resumeId}/upload`,
+        `${API}/api/resumes/${getResumeId(resume)}/upload`,
         formData
       );
 
-      alert("Resume PDF Uploaded Successfully! ✅");
+      alert("Resume PDF Uploaded Successfully!");
 
       setSelectedFile(null);
-
-      setUploading(false);
-
       await fetchData();
     } catch (error) {
       console.error("Upload Resume error:", error);
-
+      alert(
+        error.response?.data || "Resume PDF upload failed!"
+      );
+    } finally {
       setUploading(false);
-
-      if (
-        error.response &&
-        error.response.data
-      ) {
-        alert(error.response.data);
-      } else {
-        alert("Resume PDF upload failed!");
-      }
     }
   };
 
@@ -398,872 +308,400 @@ function SeekerDashboard() {
     localStorage.removeItem("email");
     localStorage.removeItem("role");
     localStorage.removeItem("isLoggedIn");
-
     navigate("/");
   };
 
-  return (
-    <div
-      style={{
-        padding: "30px"
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center"
+  const changePage = (nextPage) => {
+    setPage(nextPage);
+    setEditMode(false);
+    setCreateMode(false);
+  };
+
+  const buttonStyle = {
+    border: "none",
+    padding: "11px 18px",
+    borderRadius: "7px",
+    cursor: "pointer",
+    fontWeight: "600"
+  };
+
+  const greenButton = {
+    ...buttonStyle,
+    backgroundColor: "#198754",
+    color: "white"
+  };
+
+  const blueButton = {
+    ...buttonStyle,
+    backgroundColor: "#0d6efd",
+    color: "white"
+  };
+
+  const cardStyle = {
+    border: "1px solid #e2e8f0",
+    padding: "22px",
+    marginBottom: "18px",
+    borderRadius: "10px",
+    backgroundColor: "#ffffff"
+  };
+
+  const inputStyle = {
+    width: "100%",
+    padding: "12px",
+    marginTop: "7px",
+    boxSizing: "border-box",
+    border: "1px solid #cbd5e1",
+    borderRadius: "7px",
+    fontSize: "15px"
+  };
+
+  const resumeForm = (title, onSave, saveLabel) => (
+    <div style={{ ...cardStyle, maxWidth: "650px" }}>
+      <h3>{title}</h3>
+
+      <div style={{ marginBottom: "18px" }}>
+        <label><b>Education</b></label>
+        <input
+          style={inputStyle}
+          value={education}
+          onChange={(e) => setEducation(e.target.value)}
+          placeholder="Enter your education"
+        />
+      </div>
+
+      <div style={{ marginBottom: "18px" }}>
+        <label><b>Skills</b></label>
+        <input
+          style={inputStyle}
+          value={skills}
+          onChange={(e) => setSkills(e.target.value)}
+          placeholder="Enter your skills"
+        />
+      </div>
+
+      <div style={{ marginBottom: "20px" }}>
+        <label><b>Experience</b></label>
+        <input
+          style={inputStyle}
+          value={experience}
+          onChange={(e) => setExperience(e.target.value)}
+          placeholder="Enter your experience"
+        />
+      </div>
+
+      <button style={greenButton} onClick={onSave}>
+        {saveLabel}
+      </button>
+
+      <button
+        style={{ ...buttonStyle, marginLeft: "10px", background: "#e2e8f0" }}
+        onClick={() => {
+          setCreateMode(false);
+          setEditMode(false);
         }}
       >
-        <div>
-          <h1>
-            Job Seeker Dashboard
-          </h1>
+        Cancel
+      </button>
+    </div>
+  );
 
-          <p>
-            Welcome, {email}
-          </p>
+  return (
+    <div className="seeker-dashboard">
+      <header className="seeker-header">
+        <div>
+          <h1>Job Seeker Dashboard</h1>
+          <p>Welcome, {email}</p>
         </div>
 
         <button
+          className="seeker-logout"
           onClick={logout}
-          style={{
-            backgroundColor: "#dc3545",
-            color: "white",
-            border: "none",
-            padding: "10px 18px",
-            borderRadius: "6px",
-            cursor: "pointer"
-          }}
         >
           Logout
         </button>
-      </div>
+      </header>
 
-      <hr />
-
-      <div
-        style={{
-          marginTop: "20px",
-          marginBottom: "20px"
-        }}
-      >
+      <nav className="seeker-navigation">
         <button
-          onClick={() => {
-            setPage("home");
-            setEditMode(false);
-            setCreateMode(false);
-          }}
-          style={{
-            marginRight: "10px",
-            padding: "10px 18px",
-            cursor: "pointer"
-          }}
+          className={page === "home" ? "active" : ""}
+          onClick={() => changePage("home")}
         >
           Home
         </button>
 
         <button
-          onClick={() => {
-            setPage("applications");
-            setEditMode(false);
-            setCreateMode(false);
-          }}
-          style={{
-            marginRight: "10px",
-            padding: "10px 18px",
-            cursor: "pointer"
-          }}
+          className={page === "applications" ? "active" : ""}
+          onClick={() => changePage("applications")}
         >
           My Applications
         </button>
 
         <button
-          onClick={() => {
-            setPage("resume");
-            setEditMode(false);
-            setCreateMode(false);
-          }}
-          style={{
-            padding: "10px 18px",
-            cursor: "pointer"
-          }}
+          className={page === "resume" ? "active" : ""}
+          onClick={() => changePage("resume")}
         >
           My Resume
         </button>
-      </div>
+      </nav>
 
-      <hr />
-
-      {page === "home" && (
-        <div>
-          <h2>
-            Available Jobs
-          </h2>
-
-          {loading ? (
-            <p>
-              Loading jobs...
+      <main className="seeker-content">
+        {page === "home" && (
+          <section>
+            <h2>Available Jobs</h2>
+            <p className="seeker-subtitle">
+              Explore opportunities and apply for jobs that match your skills.
             </p>
-          ) : jobs.length === 0 ? (
-            <p>
-              No jobs available.
-            </p>
-          ) : (
-            <div>
-              {jobs.map((job) => {
-                const user = getCurrentUser();
 
-                const userId = getUserId(user);
+            {loading ? (
+              <p>Loading jobs...</p>
+            ) : jobs.length === 0 ? (
+              <p>No jobs available.</p>
+            ) : (
+              <div className="seeker-job-list">
+                {jobs.map((job) => {
+                  const user = getCurrentUser();
+                  const userId = getUserId(user);
 
-                const alreadyApplied = user
-                  ? applications.some(
-                      (application) =>
-                        String(application.jobID) ===
-                          String(job.jobID) &&
-                        String(application.seekerID) ===
-                          String(userId)
-                    )
-                  : false;
-
-                return (
-                  <div
-                    key={job.jobID}
-                    style={{
-                      border: "1px solid #ccc",
-                      padding: "20px",
-                      marginBottom: "15px",
-                      borderRadius: "8px"
-                    }}
-                  >
-                    <h3>
-                      {job.title}
-                    </h3>
-
-                    <p>
-                      <b>Description:</b>{" "}
-                      {job.description}
-                    </p>
-
-                    <p>
-                      <b>Location:</b>{" "}
-                      {job.location}
-                    </p>
-
-                    <p>
-                      <b>Salary:</b>{" "}
-                      ₹{job.salary}
-                    </p>
-
-                    <p>
-                      <b>Job Type:</b>{" "}
-                      {job.jobType ||
-                        "Not Specified"}
-                    </p>
-
-                    {alreadyApplied ? (
-                      <button
-                        disabled
-                        style={{
-                          backgroundColor: "#6c757d",
-                          color: "white",
-                          border: "none",
-                          padding: "10px 18px",
-                          borderRadius: "6px"
-                        }}
-                      >
-                        Already Applied
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() =>
-                          applyJob(job.jobID)
-                        }
-                        style={{
-                          backgroundColor: "#198754",
-                          color: "white",
-                          border: "none",
-                          padding: "10px 18px",
-                          borderRadius: "6px",
-                          cursor: "pointer",
-                          fontWeight: "bold"
-                        }}
-                      >
-                        Apply Job
-                      </button>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      )}
-
-      {page === "applications" && (
-        <div>
-          <h2>
-            My Applications
-          </h2>
-
-          {loading ? (
-            <p>
-              Loading applications...
-            </p>
-          ) : getMyApplications().length === 0 ? (
-            <p>
-              You have not applied for any jobs yet.
-            </p>
-          ) : (
-            <div>
-              {getMyApplications().map(
-                (application) => {
-                  const job = getJob(
-                    application.jobID
-                  );
+                  const alreadyApplied = user
+                    ? applications.some(
+                        (application) =>
+                          String(application.jobID ?? application.jobId) ===
+                            String(job.jobID ?? job.jobId) &&
+                          String(application.seekerID ?? application.seekerId) ===
+                            String(userId)
+                      )
+                    : false;
 
                   return (
-                    <div
-                      key={
-                        application.applicationID
-                      }
-                      style={{
-                        border: "1px solid #ccc",
-                        padding: "20px",
-                        marginBottom: "15px",
-                        borderRadius: "8px"
-                      }}
+                    <article
+                      className="seeker-job-card"
+                      key={job.jobID ?? job.jobId}
                     >
-                      <h3>
-                        {job
-                          ? job.title
-                          : "Job Not Found"}
-                      </h3>
+                      <div className="seeker-job-top">
+                        <div>
+                          <h3>{job.title}</h3>
+                          <p className="seeker-job-location">
+                            {job.location || "Location not specified"}
+                          </p>
+                        </div>
+
+                        <span className="seeker-job-type">
+                          {job.jobType || "Full-time"}
+                        </span>
+                      </div>
 
                       <p>
-                        <b>
-                          Application ID:
-                        </b>{" "}
-                        {application.applicationID}
+                        <b>Description:</b>{" "}
+                        {job.description || "No description provided"}
+                      </p>
+
+                      <p>
+                        <b>Salary:</b>{" "}
+                        {job.salary != null ? `₹${job.salary}` : "Not specified"}
+                      </p>
+
+                      <button
+                        style={alreadyApplied
+                          ? { ...buttonStyle, background: "#64748b", color: "white" }
+                          : greenButton}
+                        disabled={alreadyApplied}
+                        onClick={() => applyJob(job.jobID ?? job.jobId)}
+                      >
+                        {alreadyApplied ? "Already Applied" : "Apply Job"}
+                      </button>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+        )}
+
+        {page === "applications" && (
+          <section>
+            <h2>My Applications</h2>
+            <p className="seeker-subtitle">
+              Track the status of the jobs you have applied for.
+            </p>
+
+            {loading ? (
+              <p>Loading applications...</p>
+            ) : getMyApplications().length === 0 ? (
+              <div className="seeker-empty">
+                <h3>No applications yet</h3>
+                <p>You have not applied for any jobs yet.</p>
+                <button
+                  style={blueButton}
+                  onClick={() => changePage("home")}
+                >
+                  Browse Available Jobs
+                </button>
+              </div>
+            ) : (
+              <div className="seeker-job-list">
+                {getMyApplications().map((application, index) => {
+                  const job = getJob(
+                    application.jobID ?? application.jobId
+                  );
+
+                  const status = application.status || "Applied";
+
+                  return (
+                    <article
+                      className="seeker-job-card"
+                      key={application.applicationID ?? application.applicationId ?? index}
+                    >
+                      <h3>{job ? job.title : "Job Not Found"}</h3>
+
+                      <p>
+                        <b>Application ID:</b>{" "}
+                        {application.applicationID ?? application.applicationId ?? "N/A"}
                       </p>
 
                       {job && (
                         <>
-                          <p>
-                            <b>
-                              Location:
-                            </b>{" "}
-                            {job.location}
-                          </p>
-
-                          <p>
-                            <b>
-                              Salary:
-                            </b>{" "}
-                            ₹{job.salary}
-                          </p>
-
-                          <p>
-                            <b>
-                              Job Type:
-                            </b>{" "}
-                            {job.jobType ||
-                              "Not Specified"}
-                          </p>
+                          <p><b>Location:</b> {job.location || "Not specified"}</p>
+                          <p><b>Salary:</b> {job.salary != null ? `₹${job.salary}` : "Not specified"}</p>
+                          <p><b>Job Type:</b> {job.jobType || "Not specified"}</p>
                         </>
                       )}
 
                       <p>
                         <b>Status:</b>{" "}
-
-                        <span
-                          style={{
-                            padding:
-                              "6px 12px",
-                            borderRadius:
-                              "15px",
-                            fontWeight:
-                              "bold",
-                            backgroundColor:
-                              application.status ===
-                              "Selected"
-                                ? "#d4edda"
-                                : application.status ===
-                                  "Rejected"
-                                ? "#f8d7da"
-                                : application.status ===
-                                  "Under Review"
-                                ? "#fff3cd"
-                                : "#e2e3e5"
-                          }}
-                        >
-                          {application.status}
+                        <span className={`seeker-status seeker-status-${String(status).toLowerCase().replace(/\s+/g, "-")}`}>
+                          {status}
                         </span>
                       </p>
 
                       <p>
-                        <b>
-                          Resume ID:
-                        </b>{" "}
-                        {application.resumeID}
+                        <b>Resume ID:</b>{" "}
+                        {application.resumeID ?? application.resumeId ?? "N/A"}
                       </p>
-                    </div>
+                    </article>
                   );
-                }
-              )}
-            </div>
-          )}
-        </div>
-      )}
+                })}
+              </div>
+            )}
+          </section>
+        )}
 
-      {page === "resume" && (
-        <div>
-          <h2>
-            My Resume
-          </h2>
+        {page === "resume" && (
+          <section>
+            <h2>My Resume</h2>
+            <p className="seeker-subtitle">
+              Keep your profile updated to help employers review your application.
+            </p>
 
-          {(() => {
-            const user = getCurrentUser();
-            const resume = getCurrentResume();
+            {loading ? (
+              <p>Loading resume...</p>
+            ) : (() => {
+              const user = getCurrentUser();
+              const resume = getCurrentResume();
 
-            if (!user) {
-              return (
-                <div>
-                  <p>
-                    User not found.
-                  </p>
-
-                  <p
-                    style={{
-                      color: "#777"
-                    }}
-                  >
-                    Logged in email: {email}
-                  </p>
-                </div>
-              );
-            }
-
-            if (!resume) {
-              if (!createMode) {
+              if (!user) {
                 return (
-                  <div>
-                    <p>
-                      Resume not found.
-                    </p>
-
-                    <button
-                      onClick={() =>
-                        setCreateMode(true)
-                      }
-                      style={{
-                        backgroundColor:
-                          "#198754",
-                        color: "white",
-                        border: "none",
-                        padding:
-                          "10px 18px",
-                        borderRadius:
-                          "6px",
-                        cursor:
-                          "pointer",
-                        fontWeight:
-                          "bold"
-                      }}
-                    >
-                      Create Resume
-                    </button>
+                  <div className="seeker-empty">
+                    <h3>User not found</h3>
+                    <p>Logged in email: {email}</p>
                   </div>
                 );
               }
 
+              if (!resume) {
+                return createMode
+                  ? resumeForm("Create Resume", createResume, "Save Resume")
+                  : (
+                    <div className="seeker-empty">
+                      <h3>Resume not found</h3>
+                      <p>Create your resume before applying for jobs.</p>
+                      <button
+                        style={greenButton}
+                        onClick={() => setCreateMode(true)}
+                      >
+                        Create Resume
+                      </button>
+                    </div>
+                  );
+              }
+
+              if (editMode) {
+                return resumeForm("Edit Resume", updateResume, "Update Resume");
+              }
+
               return (
-                <div
-                  style={{
-                    border:
-                      "1px solid #ccc",
-                    padding: "25px",
-                    marginTop: "20px",
-                    borderRadius:
-                      "8px",
-                    maxWidth:
-                      "600px"
-                  }}
-                >
-                  <h3>
-                    Create Resume
-                  </h3>
+                <div style={cardStyle}>
+                  <div className="seeker-resume-heading">
+                    <div className="seeker-avatar">
+                      {(user.name || user.email || "U").charAt(0).toUpperCase()}
+                    </div>
 
-                  <div
-                    style={{
-                      marginBottom:
-                        "15px"
-                    }}
-                  >
-                    <label>
-                      <b>
-                        Education
-                      </b>
-                    </label>
-
-                    <input
-                      type="text"
-                      value={
-                        education
-                      }
-                      onChange={(e) =>
-                        setEducation(
-                          e.target.value
-                        )
-                      }
-                      placeholder="Enter education"
-                      style={{
-                        width: "100%",
-                        padding:
-                          "10px",
-                        marginTop:
-                          "5px",
-                        boxSizing:
-                          "border-box"
-                      }}
-                    />
+                    <div>
+                      <h3>{user.name || "Job Seeker"}</h3>
+                      <p>{user.email}</p>
+                    </div>
                   </div>
 
-                  <div
-                    style={{
-                      marginBottom:
-                        "15px"
-                    }}
-                  >
-                    <label>
-                      <b>
-                        Skills
-                      </b>
-                    </label>
+                  <hr />
 
-                    <input
-                      type="text"
-                      value={skills}
-                      onChange={(e) =>
-                        setSkills(
-                          e.target.value
-                        )
-                      }
-                      placeholder="Enter skills"
-                      style={{
-                        width: "100%",
-                        padding:
-                          "10px",
-                        marginTop:
-                          "5px",
-                        boxSizing:
-                          "border-box"
-                      }}
-                    />
-                  </div>
+                  <p><b>Resume ID:</b> {getResumeId(resume)}</p>
+                  <p><b>Education:</b> {resume.education || "Not provided"}</p>
+                  <p><b>Skills:</b> {resume.skills || "Not provided"}</p>
+                  <p><b>Experience:</b> {resume.experience || "Not provided"}</p>
 
-                  <div
-                    style={{
-                      marginBottom:
-                        "20px"
-                    }}
-                  >
-                    <label>
-                      <b>
-                        Experience
-                      </b>
-                    </label>
+                  <p>
+                    <b>Resume File:</b>{" "}
+                    {resume.filePath ? (
+                      <a
+                        href={`${API}${resume.filePath}`}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        View Resume PDF
+                      </a>
+                    ) : (
+                      "No file uploaded"
+                    )}
+                  </p>
 
-                    <input
-                      type="text"
-                      value={
-                        experience
-                      }
-                      onChange={(e) =>
-                        setExperience(
-                          e.target.value
-                        )
-                      }
-                      placeholder="Enter experience"
-                      style={{
-                        width: "100%",
-                        padding:
-                          "10px",
-                        marginTop:
-                          "5px",
-                        boxSizing:
-                          "border-box"
-                      }}
-                    />
-                  </div>
-
-                  <button
-                    onClick={
-                      createResume
-                    }
-                    style={{
-                      backgroundColor:
-                        "#198754",
-                      color: "white",
-                      border: "none",
-                      padding:
-                        "10px 18px",
-                      borderRadius:
-                        "6px",
-                      cursor:
-                        "pointer",
-                      fontWeight:
-                        "bold",
-                      marginRight:
-                        "10px"
-                    }}
-                  >
-                    Save Resume
-                  </button>
-
-                  <button
-                    onClick={() =>
-                      setCreateMode(
-                        false
-                      )
-                    }
-                    style={{
-                      padding:
-                        "10px 18px",
-                      borderRadius:
-                        "6px",
-                      cursor:
-                        "pointer"
-                    }}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              );
-            }
-
-            if (editMode) {
-              return (
-                <div
-                  style={{
-                    border:
-                      "1px solid #ccc",
-                    padding: "25px",
-                    marginTop: "20px",
-                    borderRadius:
-                      "8px",
-                    maxWidth:
-                      "600px"
-                  }}
-                >
-                  <h3>
+                  <button style={blueButton} onClick={startEditResume}>
                     Edit Resume
-                  </h3>
-
-                  <div
-                    style={{
-                      marginBottom:
-                        "15px"
-                    }}
-                  >
-                    <label>
-                      <b>
-                        Education
-                      </b>
-                    </label>
-
-                    <input
-                      type="text"
-                      value={
-                        education
-                      }
-                      onChange={(e) =>
-                        setEducation(
-                          e.target.value
-                        )
-                      }
-                      style={{
-                        width: "100%",
-                        padding:
-                          "10px",
-                        marginTop:
-                          "5px",
-                        boxSizing:
-                          "border-box"
-                      }}
-                    />
-                  </div>
-
-                  <div
-                    style={{
-                      marginBottom:
-                        "15px"
-                    }}
-                  >
-                    <label>
-                      <b>
-                        Skills
-                      </b>
-                    </label>
-
-                    <input
-                      type="text"
-                      value={skills}
-                      onChange={(e) =>
-                        setSkills(
-                          e.target.value
-                        )
-                      }
-                      style={{
-                        width: "100%",
-                        padding:
-                          "10px",
-                        marginTop:
-                          "5px",
-                        boxSizing:
-                          "border-box"
-                      }}
-                    />
-                  </div>
-
-                  <div
-                    style={{
-                      marginBottom:
-                        "20px"
-                    }}
-                  >
-                    <label>
-                      <b>
-                        Experience
-                      </b>
-                    </label>
-
-                    <input
-                      type="text"
-                      value={
-                        experience
-                      }
-                      onChange={(e) =>
-                        setExperience(
-                          e.target.value
-                        )
-                      }
-                      style={{
-                        width: "100%",
-                        padding:
-                          "10px",
-                        marginTop:
-                          "5px",
-                        boxSizing:
-                          "border-box"
-                      }}
-                    />
-                  </div>
-
-                  <button
-                    onClick={
-                      updateResume
-                    }
-                    style={{
-                      backgroundColor:
-                        "#198754",
-                      color: "white",
-                      border: "none",
-                      padding:
-                        "10px 18px",
-                      borderRadius:
-                        "6px",
-                      cursor:
-                        "pointer",
-                      marginRight:
-                        "10px"
-                    }}
-                  >
-                    Update Resume
                   </button>
 
-                  <button
-                    onClick={() =>
-                      setEditMode(
-                        false
-                      )
-                    }
-                    style={{
-                      padding:
-                        "10px 18px",
-                      borderRadius:
-                        "6px",
-                      cursor:
-                        "pointer"
-                    }}
-                  >
-                    Cancel
-                  </button>
+                  <div className="seeker-upload-box">
+                    <h3>Upload Resume PDF</h3>
+                    <p>Select your resume as a PDF file.</p>
+
+                    <input
+                      type="file"
+                      accept=".pdf,application/pdf"
+                      onChange={handleFileChange}
+                    />
+
+                    {selectedFile && (
+                      <p>
+                        <b>Selected File:</b> {selectedFile.name}
+                      </p>
+                    )}
+
+                    <button
+                      style={{
+                        ...buttonStyle,
+                        background: "#6f42c1",
+                        color: "white",
+                        marginTop: "12px"
+                      }}
+                      onClick={uploadResume}
+                      disabled={uploading}
+                    >
+                      {uploading ? "Uploading..." : "Upload Resume"}
+                    </button>
+                  </div>
                 </div>
               );
-            }
-
-            return (
-              <div
-                style={{
-                  border:
-                    "1px solid #ccc",
-                  padding: "25px",
-                  marginTop: "20px",
-                  borderRadius:
-                    "8px"
-                }}
-              >
-                <h3>
-                  {user.name}
-                </h3>
-
-                <p>
-                  <b>Email:</b>{" "}
-                  {user.email}
-                </p>
-
-                <hr />
-
-                <p>
-                  <b>
-                    Resume ID:
-                  </b>{" "}
-                  {getResumeId(resume)}
-                </p>
-
-                <p>
-                  <b>
-                    Education:
-                  </b>{" "}
-                  {resume.education}
-                </p>
-
-                <p>
-                  <b>
-                    Skills:
-                  </b>{" "}
-                  {resume.skills}
-                </p>
-
-                <p>
-                  <b>
-                    Experience:
-                  </b>{" "}
-                  {resume.experience}
-                </p>
-
-                <p>
-                  <b>
-                    Resume File:
-                  </b>{" "}
-
-                  {resume.filePath ? (
-                    <a
-                      href={`${API}${resume.filePath}`}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      View Resume 📄
-                    </a>
-                  ) : (
-                    "No file uploaded"
-                  )}
-                </p>
-
-                <button
-                  onClick={
-                    startEditResume
-                  }
-                  style={{
-                    backgroundColor:
-                      "#0d6efd",
-                    color: "white",
-                    border: "none",
-                    padding:
-                      "10px 18px",
-                    borderRadius:
-                      "6px",
-                    cursor:
-                      "pointer",
-                    fontWeight:
-                      "bold",
-                    marginRight:
-                      "10px"
-                  }}
-                >
-                  Edit Resume
-                </button>
-
-                <div
-                  style={{
-                    marginTop:
-                      "20px",
-                    paddingTop:
-                      "20px",
-                    borderTop:
-                      "1px solid #ddd"
-                  }}
-                >
-                  <h3>
-                    Upload Resume PDF
-                  </h3>
-
-                  <input
-                    type="file"
-                    accept=".pdf,application/pdf"
-                    onChange={
-                      handleFileChange
-                    }
-                  />
-
-                  {selectedFile && (
-                    <p>
-                      <b>
-                        Selected File:
-                      </b>{" "}
-                      {
-                        selectedFile.name
-                      }
-                    </p>
-                  )}
-
-                  <button
-                    onClick={
-                      uploadResume
-                    }
-                    disabled={
-                      uploading
-                    }
-                    style={{
-                      backgroundColor:
-                        "#6f42c1",
-                      color: "white",
-                      border: "none",
-                      padding:
-                        "10px 18px",
-                      borderRadius:
-                        "6px",
-                      cursor:
-                        uploading
-                          ? "not-allowed"
-                          : "pointer",
-                      fontWeight:
-                        "bold",
-                      marginTop:
-                        "10px"
-                    }}
-                  >
-                    {uploading
-                      ? "Uploading..."
-                      : "Upload Resume"}
-                  </button>
-                </div>
-              </div>
-            );
-          })()}
-        </div>
-      )}
+            })()}
+          </section>
+        )}
+      </main>
     </div>
   );
 }

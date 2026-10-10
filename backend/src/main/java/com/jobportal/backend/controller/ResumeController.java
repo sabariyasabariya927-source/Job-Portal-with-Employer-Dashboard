@@ -1,10 +1,18 @@
+
 package com.jobportal.backend.controller;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -58,15 +66,13 @@ public class ResumeController {
             @RequestParam("file") MultipartFile file) {
 
         try {
-
             if (file.isEmpty()) {
                 return ResponseEntity.badRequest()
                         .body("Please select a PDF file.");
             }
 
             if (file.getOriginalFilename() == null ||
-                !file.getOriginalFilename().toLowerCase().endsWith(".pdf")) {
-
+                    !file.getOriginalFilename().toLowerCase().endsWith(".pdf")) {
                 return ResponseEntity.badRequest()
                         .body("Only PDF files are allowed.");
             }
@@ -81,10 +87,39 @@ public class ResumeController {
             return ResponseEntity.ok(resume);
 
         } catch (IOException e) {
-
             return ResponseEntity.internalServerError()
                     .body("File upload failed.");
         }
+    }
+
+    @GetMapping("/{id}/view")
+    public ResponseEntity<Resource> viewResume(@PathVariable Long id)
+            throws IOException {
+
+        Resume resume = service.getResumeById(id).orElse(null);
+
+        if (resume == null || resume.getFilePath() == null
+                || resume.getFilePath().isBlank()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        String fileName = Paths.get(resume.getFilePath())
+                .getFileName().toString();
+
+        Path filePath = Paths.get("uploads", "resumes")
+                .resolve(fileName).normalize();
+
+        if (!Files.exists(filePath) || !Files.isRegularFile(filePath)) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Resource resource = new UrlResource(filePath.toUri());
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "inline; filename=\"" + fileName + "\"")
+                .body(resource);
     }
 
     @DeleteMapping("/{id}")
