@@ -113,8 +113,7 @@ public class UserController {
                 .status(HttpStatus.FOUND)
                 .location(
                     URI.create(
-                        "https://confident-tranquility-production-e3da.up.railway.app/?verified=true"
-                    )
+"https://confident-tranquility-production-e3da.up.railway.app/?verified=true"                    )
                 )
                 .build();
     }

@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import "./Login.css";
 
 function Login() {
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -14,102 +13,76 @@ function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!email || !password) {
+    if (!email.trim() || !password) {
       alert("Please enter email and password");
       return;
     }
 
     try {
-
-     const res = await axios.post(
-  "https://job-portal-backend-932n.onrender.com/api/users/login",
-  {
-    email: email,
-    password: password
-  }
-);
+      const res = await axios.post(
+        "https://job-portal-with-employer-dashboard-q1kn.onrender.com/api/users/login",
+        {
+          email: email.trim(),
+          password: password
+        }
+      );
 
       console.log("Backend response:", res.data);
 
       if (res.data.success) {
+        const role = res.data.role?.toUpperCase();
 
-        const role = res.data.role.toUpperCase();
-
-        localStorage.setItem("email", email);
+        localStorage.setItem("email", email.trim());
         localStorage.setItem("role", role);
         localStorage.setItem("isLoggedIn", "true");
 
         if (role === "ADMIN") {
           navigate("/admin-dashboard");
-        }
-        else if (role === "EMPLOYER") {
+        } else if (role === "EMPLOYER") {
           navigate("/employer-dashboard");
-        }
-        else if (role === "JOBSEEKER") {
+        } else if (role === "JOBSEEKER") {
           navigate("/seeker-dashboard");
-        }
-        else {
+        } else {
+          localStorage.removeItem("isLoggedIn");
           alert("Unknown user role");
         }
-
       } else {
-
-        alert(
-          res.data.message || "Login failed"
-        );
-
+        alert(res.data.message || "Login failed");
       }
-
     } catch (error) {
-
       console.error("Login error:", error);
 
       if (error.response) {
+        const data = error.response.data;
 
-        alert(
-          "Login failed: " +
-          (
-            error.response.data.message ||
-            "Invalid email or password"
-          )
-        );
+        const message =
+          typeof data === "string"
+            ? data
+            : data?.message || "Invalid email or password";
 
+        alert(`Login failed: ${message}`);
       } else {
-
-        alert("Backend connection failed");
-
+        alert("Backend connection failed. Please try again.");
       }
     }
   };
 
   return (
     <div className="login-page">
-
       <div className="login-container">
 
-        {/* LEFT SIDE */}
-
         <div className="login-left">
-
           <div className="overlay">
-
             <h1>Job Portal</h1>
-
             <p>
               Find your dream job and connect
               with the right opportunities.
             </p>
-
           </div>
-
         </div>
 
-        {/* RIGHT SIDE */}
-
         <div className="login-right">
-
           <div className="login-box">
-
             <h1>Welcome</h1>
 
             <p className="login-subtitle">
@@ -117,13 +90,8 @@ function Login() {
             </p>
 
             <form onSubmit={handleSubmit}>
-
-              {/* EMAIL */}
-
               <div className="input-group">
-
                 <span>👤</span>
-
                 <input
                   type="email"
                   placeholder="Enter Email"
@@ -131,95 +99,54 @@ function Login() {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                 />
-
               </div>
 
-              {/* PASSWORD */}
-
               <div className="password-container">
-
                 <input
-                  type={
-                    showPassword
-                      ? "text"
-                      : "password"
-                  }
+                  type={showPassword ? "text" : "password"}
                   placeholder="Enter Password"
                   value={password}
-                  onChange={(e) =>
-                    setPassword(e.target.value)
-                  }
+                  onChange={(e) => setPassword(e.target.value)}
                   required
                 />
 
                 <button
                   type="button"
                   className="show-password-btn"
-                  onClick={() =>
-                    setShowPassword(!showPassword)
-                  }
+                  onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? "Hide" : "Show"}
                 </button>
-
               </div>
-
-              {/* FORGOT PASSWORD */}
 
               <div
                 className="forgot-password"
-                onClick={() =>
-                  navigate("/forgot-password")
-                }
+                onClick={() => navigate("/forgot-password")}
               >
                 Forgot your password?
               </div>
 
-              {/* LOGIN BUTTON */}
-
-              <button
-                type="submit"
-                className="login-button"
-              >
+              <button type="submit" className="login-button">
                 Log In
               </button>
-
             </form>
 
-            {/* SIGN UP */}
-
             <p className="signup-text">
-
               Don't have an account?
-
-              <span
-                onClick={() =>
-                  navigate("/register")
-                }
-              >
+              <span onClick={() => navigate("/register")}>
                 {" "}Sign up!
               </span>
-
             </p>
 
-            {/* SOCIAL ICONS */}
-
             <div className="social-icons">
-
               <span>f</span>
-
               <span>♥</span>
-
               <span>in</span>
-
             </div>
-
           </div>
-
         </div>
 
       </div>
-
     </div>
   );
 }

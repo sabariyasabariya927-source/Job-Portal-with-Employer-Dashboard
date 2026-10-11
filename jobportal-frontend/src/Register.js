@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import "./Register.css";
 
 function Register() {
-
     const navigate = useNavigate();
 
     const [name, setName] = useState("");
@@ -15,64 +14,55 @@ function Register() {
     const handleRegister = async (e) => {
         e.preventDefault();
 
-        if (!name || !email || !password) {
+        if (!name.trim() || !email.trim() || !password) {
             alert("Please fill all fields");
             return;
         }
 
         try {
-
             const res = await axios.post(
-"https://job-portal-backend-932n.onrender.com/api/users/register", {
-                    name: name,
-                    email: email,
+                "https://job-portal-with-employer-dashboard-q1kn.onrender.com/api/users/register",
+                {
+                    name: name.trim(),
+                    email: email.trim(),
                     password: password,
                     role: role
                 }
             );
 
             if (res.data.success) {
-
                 alert(
                     "Registration successful!\n\nPlease check your email and click the verification link."
                 );
 
                 navigate("/login");
-
             } else {
-
-                alert(
-                    res.data.message || "Registration failed"
-                );
+                alert(res.data.message || "Registration failed");
             }
-
         } catch (error) {
-
             console.error("Registration error:", error);
 
             if (error.response) {
+                const message =
+                    typeof error.response.data === "string"
+                        ? error.response.data
+                        : error.response.data?.message;
 
-                alert(
-                    error.response.data.message ||
-                    "Registration failed"
-                );
-
+                alert(message || `Registration failed (${error.response.status})`);
             } else {
-
-                alert("Backend connection failed");
+                alert(
+                    "Cannot connect to the backend. Please check your internet connection and try again."
+                );
             }
         }
     };
 
     return (
         <div className="auth-container">
-
             <div className="auth-box">
-
                 <h2>Create Account</h2>
 
                 <form onSubmit={handleRegister}>
-
                     <input
                         type="text"
                         placeholder="Enter Name"
@@ -101,34 +91,24 @@ function Register() {
                         value={role}
                         onChange={(e) => setRole(e.target.value)}
                     >
-                        <option value="JOBSEEKER">
-                            Job Seeker
-                        </option>
-
-                        <option value="EMPLOYER">
-                            Employer
-                        </option>
+                        <option value="JOBSEEKER">Job Seeker</option>
+                        <option value="EMPLOYER">Employer</option>
                     </select>
 
-                    <button type="submit">
-                        Register
-                    </button>
-
+                    <button type="submit">Register</button>
                 </form>
 
                 <p>
-                    Already have an account?
-
+                    Already have an account?{" "}
                     <button
+                        type="button"
                         className="link-button"
                         onClick={() => navigate("/login")}
                     >
                         Login
                     </button>
                 </p>
-
             </div>
-
         </div>
     );
 }
