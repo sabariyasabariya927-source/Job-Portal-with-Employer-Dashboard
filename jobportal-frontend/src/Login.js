@@ -21,13 +21,13 @@ function Login() {
 
     try {
 
-      const res = await axios.post(
-"http://localhost:8081/api/users/login" ,       
-{
-          email: email,
-          password: password
-        }
-      );
+     const res = await axios.post(
+  "https://job-portal-backend-932n.onrender.com/api/users/login",
+  {
+    email: email,
+    password: password
+  }
+);
 
       console.log("Backend response:", res.data);
 
