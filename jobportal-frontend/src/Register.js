@@ -23,8 +23,7 @@ function Register() {
         try {
 
             const res = await axios.post(
-                "https://job-portal-with-employer-dashboard-production.up.railway.app/api/users/register",
-                {
+"https://job-portal-backend-932n.onrender.com/api/users/register", {
                     name: name,
                     email: email,
                     password: password,
