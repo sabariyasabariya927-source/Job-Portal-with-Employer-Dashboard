@@ -1,3 +1,4 @@
+
 package com.jobportal.backend.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,9 +14,7 @@ public class EmailService {
 
     public void sendVerificationEmail(String email, String token) {
 
-        String link =
-                "https://job-portal-with-employer-dashboard-production.up.railway.app/api/users/verify?token="
-                + token;
+        String link = "https://job-portal-with-employer-dashboard-q1kn.onrender.com/api/users/verify?token=" + token;
 
         SimpleMailMessage message = new SimpleMailMessage();
 
