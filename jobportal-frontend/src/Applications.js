@@ -10,9 +10,9 @@ function Applications() {
   const fetchData = async () => {
     try {
       const [applicationsRes, jobsRes, usersRes] = await Promise.all([
-        axios.get("https://job-portal-with-employer-dashboard-production.up.railway.app/api/applications"),
-        axios.get("https://job-portal-with-employer-dashboard-production.up.railway.app/api/jobs"),
-        axios.get("https://job-portal-with-employer-dashboard-production.up.railway.app/api/users")
+        axios.get("https://job-portal-backend-932n.onrender.com/api/applications"),
+        axios.get("https://job-portal-backend-932n.onrender.com/api/jobs"),
+        axios.get("https://job-portal-backend-932n.onrender.com/api/users")
       ]);
 
       setApplications(applicationsRes.data);
@@ -44,7 +44,7 @@ function Applications() {
 
     try {
       await axios.delete(
-        `https://job-portal-with-employer-dashboard-production.up.railway.app/api/applications/${applicationID}`
+        `https://job-portal-backend-932n.onrender.com/api/applications/${applicationID}`
       );
 
       alert("Application deleted successfully!");

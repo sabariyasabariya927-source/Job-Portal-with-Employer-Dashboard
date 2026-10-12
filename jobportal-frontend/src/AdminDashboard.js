@@ -19,7 +19,8 @@ function AdminDashboard() {
   const fetchUsers = async () => {
     try {
       const response = await axios.get(
-        "https://job-portal-with-employer-dashboard-production.up.railway.app/api/users"
+        "https://job-portal-backend-932n.onrender.com/api/users"
+
       );
       console.log("USERS FROM BACKEND:", response.data);
       setUsers(response.data);
@@ -32,7 +33,7 @@ function AdminDashboard() {
   const fetchJobs = async () => {
     try {
       const response = await axios.get(
-        "https://job-portal-with-employer-dashboard-production.up.railway.app/api/jobs"
+        "https://job-portal-backend-932n.onrender.com/api/jobs"
       );
       console.log("JOBS FROM BACKEND:", response.data);
       setJobs(response.data);
@@ -45,7 +46,7 @@ function AdminDashboard() {
   const fetchApplications = async () => {
     try {
       const response = await axios.get(
-        "https://job-portal-with-employer-dashboard-production.up.railway.app/api/applications"
+        "https://job-portal-backend-932n.onrender.com/api/applications"
       );
       console.log("APPLICATIONS FROM BACKEND:", response.data);
       setApplications(response.data);
@@ -64,7 +65,7 @@ function AdminDashboard() {
 
     try {
       await axios.delete(
-        `https://job-portal-with-employer-dashboard-production.up.railway.app/api/applications/${id}`
+        `https://job-portal-backend-932n.onrender.com/api/applications/${id}`
       );
 
       alert("Application deleted successfully!");

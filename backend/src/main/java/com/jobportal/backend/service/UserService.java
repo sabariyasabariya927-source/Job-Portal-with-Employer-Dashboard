@@ -1,3 +1,4 @@
+
 package com.jobportal.backend.service;
 
 import java.util.List;
@@ -15,24 +16,26 @@ public class UserService {
     @Autowired
     private UserRepository repo;
 
-    // 🔹 Register new user
+    @Autowired
+    private PasswordService passwordService;
+
     public User registerUser(User user) {
+        if (user.getPassword() != null
+                && !passwordService.isEncoded(user.getPassword())) {
+            user.setPassword(passwordService.encode(user.getPassword()));
+        }
         return repo.save(user);
     }
 
-    // 🔹 Get all users
     public List<User> getAllUsers() {
         return repo.findAll();
     }
 
-    // 🔹 Get user by email
     public Optional<User> getUserByEmail(String email) {
         return repo.findByEmail(email);
     }
 
-    // 🔹 Delete user by ID
-    public void deleteUser(Long id) {
+    public void deleteUser(Integer id) {
         repo.deleteById(id);
     }
 }
-

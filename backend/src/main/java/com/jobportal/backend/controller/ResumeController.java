@@ -31,7 +31,9 @@ import com.jobportal.backend.service.ResumeService;
 
 @RestController
 @RequestMapping("/api/resumes")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = {"http://localhost:3000",
+"https://inquisitive-meerkat-a28b57.netlify.app"}
+)
 public class ResumeController {
 
     @Autowired

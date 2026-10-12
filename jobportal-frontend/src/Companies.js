@@ -8,7 +8,7 @@ function Companies() {
   const fetchCompanies = async () => {
     try {
       const response = await axios.get(
-        "https://job-portal-with-employer-dashboard-production.up.railway.app/api/companies"
+        "https:///api/companies"
       );
 
       console.log("COMPANIES:", response.data);

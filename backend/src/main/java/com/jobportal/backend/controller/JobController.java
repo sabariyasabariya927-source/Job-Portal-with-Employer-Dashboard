@@ -18,7 +18,8 @@ import com.jobportal.backend.service.JobService;
 
 @RestController
 @RequestMapping("/api/jobs")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = {"http://localhost:3000",
+"https://inquisitive-meerkat-a28b57.netlify.app"})
 public class JobController {
 
     @Autowired

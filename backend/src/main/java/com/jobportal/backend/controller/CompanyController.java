@@ -18,7 +18,8 @@ import com.jobportal.backend.service.CompanyService;
 
 @RestController
 @RequestMapping("/api/companies")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = {"http://localhost:3000",
+"https://inquisitive-meerkat-a28b57.netlify.app"})
 public class CompanyController {
 
     @Autowired

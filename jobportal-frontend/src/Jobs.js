@@ -8,7 +8,7 @@ function Jobs() {
   const fetchJobs = async () => {
     try {
      const response = await axios.get(
-  "https://job-portal-with-employer-dashboard-production.up.railway.app/api/jobs"
+  "https://https:job-portal-backend-932n.onrender.com/api/jobs"
 );
 
       console.log("JOBS:", response.data);

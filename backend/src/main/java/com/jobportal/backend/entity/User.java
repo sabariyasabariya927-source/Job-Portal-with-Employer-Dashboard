@@ -1,3 +1,4 @@
+
 package com.jobportal.backend.entity;
 
 import jakarta.persistence.Column;
@@ -13,19 +14,19 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "UserID")
+    @Column(name = "userid")
     private Integer id;
 
-    @Column(name = "Name", nullable = false)
+    @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(name = "Email", unique = true, nullable = false)
+    @Column(name = "email", unique = true, nullable = false)
     private String email;
 
-    @Column(name = "Password", nullable = false)
+    @Column(name = "password", nullable = false)
     private String password;
 
-    @Column(name = "Role")
+    @Column(name = "role")
     private String role;
 
     @Column(name = "is_verified", nullable = false)
@@ -33,6 +34,9 @@ public class User {
 
     @Column(name = "verification_token")
     private String verificationToken;
+
+    public User() {
+    }
 
     public Integer getId() {
         return id;

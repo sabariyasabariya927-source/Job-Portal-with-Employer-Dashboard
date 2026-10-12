@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -7,6 +8,7 @@ function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
 
@@ -18,19 +20,34 @@ function Login() {
       return;
     }
 
+    if (loading) return;
+
+    setLoading(true);
+
     try {
       const res = await axios.post(
-        "https://job-portal-with-employer-dashboard-q1kn.onrender.com/api/users/login",
+        "https://job-portal-backend-932n.onrender.com/api/users/login",
         {
           email: email.trim(),
-          password: password
+          password
+        },
+        {
+          headers: {
+            "Content-Type": "application/json"
+          },
+          timeout: 30000
         }
       );
 
-      console.log("Backend response:", res.data);
-
-      if (res.data.success) {
+      if (res.data?.success) {
         const role = res.data.role?.toUpperCase();
+
+        if (
+          !["ADMIN", "EMPLOYER", "JOBSEEKER"].includes(role)
+        ) {
+          alert("Unknown user role");
+          return;
+        }
 
         localStorage.setItem("email", email.trim());
         localStorage.setItem("role", role);
@@ -40,37 +57,36 @@ function Login() {
           navigate("/admin-dashboard");
         } else if (role === "EMPLOYER") {
           navigate("/employer-dashboard");
-        } else if (role === "JOBSEEKER") {
-          navigate("/seeker-dashboard");
         } else {
-          localStorage.removeItem("isLoggedIn");
-          alert("Unknown user role");
+          navigate("/seeker-dashboard");
         }
       } else {
-        alert(res.data.message || "Login failed");
+        alert(res.data?.message || "Login failed");
       }
     } catch (error) {
       console.error("Login error:", error);
 
       if (error.response) {
         const data = error.response.data;
-
         const message =
           typeof data === "string"
             ? data
             : data?.message || "Invalid email or password";
 
         alert(`Login failed: ${message}`);
+      } else if (error.code === "ECONNABORTED") {
+        alert("Request timed out. Please try again.");
       } else {
         alert("Backend connection failed. Please try again.");
       }
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="login-page">
       <div className="login-container">
-
         <div className="login-left">
           <div className="overlay">
             <h1>Job Portal</h1>
@@ -97,6 +113,7 @@ function Login() {
                   placeholder="Enter Email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="email"
                   required
                 />
               </div>
@@ -107,6 +124,7 @@ function Login() {
                   placeholder="Enter Password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="current-password"
                   required
                 />
 
@@ -122,12 +140,23 @@ function Login() {
               <div
                 className="forgot-password"
                 onClick={() => navigate("/forgot-password")}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    navigate("/forgot-password");
+                  }
+                }}
               >
                 Forgot your password?
               </div>
 
-              <button type="submit" className="login-button">
-                Log In
+              <button
+                type="submit"
+                className="login-button"
+                disabled={loading}
+              >
+                {loading ? "Logging in..." : "Log In"}
               </button>
             </form>
 
@@ -145,7 +174,6 @@ function Login() {
             </div>
           </div>
         </div>
-
       </div>
     </div>
   );

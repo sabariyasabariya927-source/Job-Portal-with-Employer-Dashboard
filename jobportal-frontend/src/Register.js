@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -10,50 +11,73 @@ function Register() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [role, setRole] = useState("JOBSEEKER");
+    const [loading, setLoading] = useState(false);
 
     const handleRegister = async (e) => {
         e.preventDefault();
+
+        if (loading) return;
 
         if (!name.trim() || !email.trim() || !password) {
             alert("Please fill all fields");
             return;
         }
 
+        if (password.length < 8) {
+            alert("Password must contain at least 8 characters");
+            return;
+        }
+
+        setLoading(true);
+
         try {
             const res = await axios.post(
-                "https://job-portal-with-employer-dashboard-q1kn.onrender.com/api/users/register",
+                "https://job-portal-backend-932n.onrender.com/api/users/register",
                 {
                     name: name.trim(),
                     email: email.trim(),
-                    password: password,
-                    role: role
+                    password,
+                    role
+                },
+                {
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    timeout: 30000
                 }
             );
 
-            if (res.data.success) {
+            if (res.data?.success) {
                 alert(
                     "Registration successful!\n\nPlease check your email and click the verification link."
                 );
 
                 navigate("/login");
             } else {
-                alert(res.data.message || "Registration failed");
+                alert(res.data?.message || "Registration failed");
             }
         } catch (error) {
             console.error("Registration error:", error);
 
             if (error.response) {
-                const message =
-                    typeof error.response.data === "string"
-                        ? error.response.data
-                        : error.response.data?.message;
+                const data = error.response.data;
 
-                alert(message || `Registration failed (${error.response.status})`);
+                const message =
+                    typeof data === "string"
+                        ? data
+                        : data?.message ||
+                          `Registration failed (${error.response.status})`;
+
+                alert(message);
+            } else if (error.code === "ECONNABORTED") {
+                alert("Request timed out. Please try again.");
             } else {
                 alert(
-                    "Cannot connect to the backend. Please check your internet connection and try again."
+                    "Cannot connect to the backend. Please try again."
                 );
             }
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -68,6 +92,7 @@ function Register() {
                         placeholder="Enter Name"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
+                        autoComplete="name"
                         required
                     />
 
@@ -76,6 +101,7 @@ function Register() {
                         placeholder="Enter Email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
+                        autoComplete="email"
                         required
                     />
 
@@ -84,6 +110,8 @@ function Register() {
                         placeholder="Enter Password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
+                        autoComplete="new-password"
+                        minLength={8}
                         required
                     />
 
@@ -95,7 +123,9 @@ function Register() {
                         <option value="EMPLOYER">Employer</option>
                     </select>
 
-                    <button type="submit">Register</button>
+                    <button type="submit" disabled={loading}>
+                        {loading ? "Registering..." : "Register"}
+                    </button>
                 </form>
 
                 <p>
