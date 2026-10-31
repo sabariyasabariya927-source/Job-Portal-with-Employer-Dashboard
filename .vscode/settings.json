@@ -1,4 +1,40 @@
 {
     "java.compile.nullAnalysis.mode": "automatic",
-    "java.configuration.updateBuildConfiguration": "interactive"
+    "java.configuration.updateBuildConfiguration": "interactive",
+    "sqltools.connections": [
+        {
+            "mysqlOptions": {
+                "authProtocol": "default",
+                "enableSsl": "Disabled"
+            },
+            "ssh": "Disabled",
+            "previewLimit": 50,
+            "server": "mysql-d6e1686-sabariyasabariya927-e9ca.d.aivencloud.com",
+            "port": 25320,
+            "driver": "MySQL",
+            "name": "Aiven Job Portal",
+            "database": "defaultdb",
+            "username": "avnadmin"
+        },
+        {
+            "mysqlOptions": {
+                "authProtocol": "default",
+                "enableSsl": "Disabled"
+            },
+            "ssh": "Enabled",
+            "previewLimit": 50,
+            "server": "mysql-d6e1686-sabariyasabariya927-e9ca.d.aivencloud.com",
+            "port": 25320,
+            "sshOptions": {
+                "port": 22,
+                "host": "mysql-d6e1686-sabariyasabariya927-e9ca.d.aivencloud.com",
+                "username": "defaultdb"
+            },
+            "driver": "MariaDB",
+            "name": "Aiven Job Portal",
+            "group": "mysql-d6e1686-sabariyasabariya927-e9ca.d.aivencloud.com",
+            "database": "defaultdb",
+            "username": "avnadmin"
+        }
+    ]
 }
