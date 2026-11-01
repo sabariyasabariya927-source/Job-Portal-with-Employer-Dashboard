@@ -27,10 +27,28 @@ public class EmailService {
                 + link
                 + "\n\nAfter verification, you can login to your account.";
 
+        sendEmail(email, "Verify your Job Portal Account", message);
+    }
+
+    public void sendPasswordResetEmail(String email, String token) {
+
+        String link = "https://magenta-platypus-752473.netlify.app/reset-password?token=" + token;
+
+        String message = "Password Reset Request\n\n"
+                + "Click the link below to reset your Job Portal password:\n\n"
+                + link
+                + "\n\nThis link expires in 15 minutes."
+                + "\n\nIf you did not request this, ignore this email.";
+
+        sendEmail(email, "Reset Your Job Portal Password", message);
+    }
+
+    private void sendEmail(String email, String subject, String message) {
+
         String body = "{"
                 + "\"from\":\"Job Portal <onboarding@resend.dev>\","
                 + "\"to\":[\"" + escapeJson(email) + "\"],"
-                + "\"subject\":\"Verify your Job Portal Account\","
+                + "\"subject\":\"" + escapeJson(subject) + "\","
                 + "\"text\":\"" + escapeJson(message) + "\""
                 + "}";
 

@@ -1,5 +1,7 @@
+
 package com.jobportal.backend.controller;
 
+import java.time.LocalDateTime;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
@@ -54,22 +56,21 @@ public class UserController {
 
         user.setEmail(email);
 
-        
-String role = user.getRole();
+        String role = user.getRole();
 
-if (role == null || role.trim().isEmpty()) {
-    user.setRole("JOBSEEKER");
-} else {
-    role = role.trim().toUpperCase();
+        if (role == null || role.trim().isEmpty()) {
+            user.setRole("JOBSEEKER");
+        } else {
+            role = role.trim().toUpperCase();
 
-    if (!role.equals("JOBSEEKER") && !role.equals("EMPLOYER")) {
-        return ResponseEntity.badRequest().body(
-                Map.of("success", false,
-                        "message", "Invalid role. Choose JOBSEEKER or EMPLOYER."));
-    }
+            if (!role.equals("JOBSEEKER") && !role.equals("EMPLOYER")) {
+                return ResponseEntity.badRequest().body(
+                        Map.of("success", false,
+                                "message", "Invalid role. Choose JOBSEEKER or EMPLOYER."));
+            }
 
-    user.setRole(role);
-}
+            user.setRole(role);
+        }
 
         user.setPassword(passwordService.encode(user.getPassword()));
         user.setVerified(false);
@@ -82,12 +83,13 @@ if (role == null || role.trim().isEmpty()) {
                     savedUser.getEmail(),
                     savedUser.getVerificationToken());
         } catch (Exception e) {
-    e.printStackTrace();
-    userRepository.delete(savedUser);
-    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
-            Map.of("success", false,
-                    "message", "Unable to send verification email"));
-}
+            e.printStackTrace();
+            userRepository.delete(savedUser);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                    Map.of("success", false,
+                            "message", "Unable to send verification email"));
+        }
+
         return ResponseEntity.ok(
                 Map.of("success", true,
                         "message", "Registration successful. Please verify your email."));
@@ -184,10 +186,94 @@ if (role == null || role.trim().isEmpty()) {
     public ResponseEntity<?> forgotPassword(
             @RequestBody Map<String, String> data) {
 
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(
-                Map.of("success", false,
+        String email = data.get("email");
+
+        if (email == null || email.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(
+                    Map.of("success", false,
+                            "message", "Email is required"));
+        }
+
+        Optional<User> existingUser =
+                userRepository.findByEmail(email.trim());
+
+        if (existingUser.isPresent()
+                && existingUser.get().isVerified()) {
+
+            User user = existingUser.get();
+
+            String token = UUID.randomUUID().toString();
+
+            user.setPasswordResetToken(token);
+            user.setPasswordResetExpiry(
+                    LocalDateTime.now().plusMinutes(15));
+
+            userRepository.save(user);
+
+            try {
+                emailService.sendPasswordResetEmail(
+                        user.getEmail(), token);
+            } catch (Exception e) {
+                e.printStackTrace();
+
+                user.setPasswordResetToken(null);
+                user.setPasswordResetExpiry(null);
+                userRepository.save(user);
+
+                return ResponseEntity.internalServerError().body(
+                        Map.of("success", false,
+                                "message", "Unable to send reset email"));
+            }
+        }
+
+        return ResponseEntity.ok(
+                Map.of("success", true,
                         "message",
-                        "Password reset is temporarily unavailable."));
+                        "If the account exists, a reset email will be sent."));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(
+            @RequestBody Map<String, String> data) {
+
+        String token = data.get("token");
+        String newPassword = data.get("newPassword");
+
+        if (token == null || newPassword == null
+                || newPassword.length() < 8) {
+            return ResponseEntity.badRequest().body(
+                    Map.of("success", false,
+                            "message", "Valid token and password of at least 8 characters are required"));
+        }
+
+        Optional<User> existingUser =
+                userRepository.findByPasswordResetToken(token);
+
+        if (existingUser.isEmpty()) {
+            return ResponseEntity.badRequest().body(
+                    Map.of("success", false,
+                            "message", "Invalid reset link"));
+        }
+
+        User user = existingUser.get();
+
+        if (user.getPasswordResetExpiry() == null
+                || user.getPasswordResetExpiry().isBefore(
+                        LocalDateTime.now())) {
+            return ResponseEntity.badRequest().body(
+                    Map.of("success", false,
+                            "message", "Reset link expired. Request a new link."));
+        }
+
+        user.setPassword(passwordService.encode(newPassword));
+        user.setPasswordResetToken(null);
+        user.setPasswordResetExpiry(null);
+
+        userRepository.save(user);
+
+        return ResponseEntity.ok(
+                Map.of("success", true,
+                        "message", "Password reset successful. Please login."));
     }
 
     private Map<String, Object> safeUserDetails(User user) {
