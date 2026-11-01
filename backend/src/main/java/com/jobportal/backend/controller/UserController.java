@@ -82,12 +82,12 @@ if (role == null || role.trim().isEmpty()) {
                     savedUser.getEmail(),
                     savedUser.getVerificationToken());
         } catch (Exception e) {
-            userRepository.delete(savedUser);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
-                    Map.of("success", false,
-                            "message", "Unable to send verification email"));
-        }
-
+    e.printStackTrace();
+    userRepository.delete(savedUser);
+    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+            Map.of("success", false,
+                    "message", "Unable to send verification email"));
+}
         return ResponseEntity.ok(
                 Map.of("success", true,
                         "message", "Registration successful. Please verify your email."));

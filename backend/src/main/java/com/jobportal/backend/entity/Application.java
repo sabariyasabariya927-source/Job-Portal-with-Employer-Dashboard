@@ -20,8 +20,8 @@ public class Application {
 
     private LocalDateTime appliedDate = LocalDateTime.now();
 
-    // Constructors
-    public Application() {}
+    public Application() {
+    }
 
     public Application(Long jobID, Long seekerID, Long resumeID, String status) {
         this.jobID = jobID;
@@ -30,22 +30,51 @@ public class Application {
         this.status = status;
     }
 
-    // Getters & Setters
-    public Long getApplicationID() { return applicationID; }
-    public void setApplicationID(Long applicationID) { this.applicationID = applicationID; }
+    public Long getApplicationID() {
+        return applicationID;
+    }
 
-    public Long getJobID() { return jobID; }
-    public void setJobID(Long jobID) { this.jobID = jobID; }
+    public void setApplicationID(Long applicationID) {
+        this.applicationID = applicationID;
+    }
 
-    public Long getSeekerID() { return seekerID; }
-    public void setSeekerID(Long seekerID) { this.seekerID = seekerID; }
+    public Long getJobID() {
+        return jobID;
+    }
 
-    public Long getResumeID() { return resumeID; }
-    public void setResumeID(Long resumeID) { this.resumeID = resumeID; }
+    public void setJobID(Long jobID) {
+        this.jobID = jobID;
+    }
 
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public Long getSeekerID() {
+        return seekerID;
+    }
 
-    public LocalDateTime getAppliedDate() { return appliedDate; }
-    public void setAppliedDate(LocalDateTime appliedDate) { this.appliedDate = appliedDate; }
+    public void setSeekerID(Long seekerID) {
+        this.seekerID = seekerID;
+    }
+
+    public Long getResumeID() {
+        return resumeID;
+    }
+
+    public void setResumeID(Long resumeID) {
+        this.resumeID = resumeID;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public LocalDateTime getAppliedDate() {
+        return appliedDate;
+    }
+
+    public void setAppliedDate(LocalDateTime appliedDate) {
+        this.appliedDate = appliedDate;
+    }
 }
