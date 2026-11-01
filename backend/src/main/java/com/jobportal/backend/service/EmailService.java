@@ -1,4 +1,3 @@
-
 package com.jobportal.backend.service;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -9,6 +8,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.io.IOException;
+import java.time.Duration;
 
 @Service
 public class EmailService {
@@ -16,7 +16,9 @@ public class EmailService {
     @Value("${RESEND_API_KEY}")
     private String apiKey;
 
-    private final HttpClient client = HttpClient.newHttpClient();
+    private final HttpClient client = HttpClient.newBuilder()
+            .connectTimeout(Duration.ofSeconds(10))
+            .build();
 
     public void sendVerificationEmail(String email, String token) {
 
@@ -54,6 +56,7 @@ public class EmailService {
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create("https://api.resend.com/emails"))
+                .timeout(Duration.ofSeconds(20))
                 .header("Authorization", "Bearer " + apiKey)
                 .header("Content-Type", "application/json")
                 .header("User-Agent", "JobPortal/1.0")
@@ -66,12 +69,15 @@ public class EmailService {
                     HttpResponse.BodyHandlers.ofString()
             );
 
+            System.out.println("Resend HTTP Status: " + response.statusCode());
+
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
-                throw new RuntimeException("Resend error: " + response.body());
+                throw new RuntimeException(
+                        "Resend error: " + response.body());
             }
 
         } catch (IOException e) {
-            throw new RuntimeException("Email sending failed", e);
+            throw new RuntimeException("Email sending failed: " + e.getMessage(), e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new RuntimeException("Email sending interrupted", e);
