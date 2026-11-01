@@ -1,9 +1,37 @@
 
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import "./Login.css";
 
 function ForgotPassword() {
     const navigate = useNavigate();
+
+    const [email, setEmail] = useState("");
+    const [message, setMessage] = useState("");
+    const [loading, setLoading] = useState(false);
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setMessage("");
+        setLoading(true);
+
+        try {
+            const response = await axios.post(
+                "https://job-portal-with-employer-dashboard-q1kn.onrender.com/api/users/forgot-password",
+                { email }
+            );
+
+            setMessage(response.data.message);
+        } catch (error) {
+            setMessage(
+                error.response?.data?.message ||
+                "Unable to send reset email. Please try again."
+            );
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
         <div className="login-page">
@@ -24,13 +52,28 @@ function ForgotPassword() {
                         <h1>Password Reset</h1>
 
                         <p className="login-subtitle">
-                            Secure password reset is temporarily unavailable.
+                            Enter your registered email address.
                         </p>
 
-                        <p>
-                            Please contact the administrator for help
-                            resetting your account password.
-                        </p>
+                        <form onSubmit={handleSubmit}>
+                            <input
+                                type="email"
+                                placeholder="Enter your email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                required
+                            />
+
+                            <button
+                                type="submit"
+                                className="login-button"
+                                disabled={loading}
+                            >
+                                {loading ? "Sending..." : "Send Reset Link"}
+                            </button>
+                        </form>
+
+                        {message && <p>{message}</p>}
 
                         <button
                             type="button"

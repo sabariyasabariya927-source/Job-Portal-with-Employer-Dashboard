@@ -1,9 +1,11 @@
+
 import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import Login from "./Login";
 import Register from "./Register";
 import ForgotPassword from "./ForgotPassword";
+import ResetPassword from "./ResetPassword";
 
 import AdminDashboard from "./AdminDashboard";
 import EmployerDashboard from "./EmployerDashboard";
@@ -29,6 +31,11 @@ function App() {
         <Route
           path="/forgot-password"
           element={<ForgotPassword />}
+        />
+
+        <Route
+          path="/reset-password"
+          element={<ResetPassword />}
         />
 
         <Route
