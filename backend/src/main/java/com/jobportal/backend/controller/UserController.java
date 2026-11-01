@@ -111,7 +111,7 @@ if (role == null || role.trim().isEmpty()) {
 
         return ResponseEntity.status(HttpStatus.FOUND)
                 .location(URI.create(
-                        "https://inquisitive-meerkat-a28b57.netlify.app/?verified=true"))
+                        "https://magenta-platypus-752473.netlify.app/?verified=true"))
                 .build();
     }
 
