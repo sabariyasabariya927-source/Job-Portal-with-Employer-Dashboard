@@ -39,6 +39,7 @@ public class UserController {
         if (user.getName() == null || user.getName().trim().isEmpty()
                 || user.getEmail() == null || user.getEmail().trim().isEmpty()
                 || user.getPassword() == null || user.getPassword().isEmpty()) {
+
             return ResponseEntity.badRequest().body(
                     Map.of("success", false,
                             "message", "Name, email and password are required"));
@@ -66,7 +67,7 @@ public class UserController {
             if (!role.equals("JOBSEEKER") && !role.equals("EMPLOYER")) {
                 return ResponseEntity.badRequest().body(
                         Map.of("success", false,
-                                "message", "Invalid role. Choose JOBSEEKER or EMPLOYER."));
+                                "message", "Invalid role"));
             }
 
             user.setRole(role);
@@ -82,10 +83,12 @@ public class UserController {
             emailService.sendVerificationEmail(
                     savedUser.getEmail(),
                     savedUser.getVerificationToken());
+
         } catch (Exception e) {
             e.printStackTrace();
             userRepository.delete(savedUser);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+
+            return ResponseEntity.internalServerError().body(
                     Map.of("success", false,
                             "message", "Unable to send verification email"));
         }
@@ -119,37 +122,50 @@ public class UserController {
 
     @GetMapping
     public List<Map<String, Object>> getAllUsers() {
-        return userRepository.findAll().stream()
+
+        return userRepository.findAll()
+                .stream()
                 .map(this::safeUserDetails)
                 .toList();
     }
 
     @GetMapping("/{email}")
-    public ResponseEntity<?> getUserByEmail(@PathVariable String email) {
+    public ResponseEntity<?> getUserByEmail(
+            @PathVariable String email) {
 
-        Optional<User> existingUser = userRepository.findByEmail(email);
+        Optional<User> existingUser =
+                userRepository.findByEmail(email.trim());
 
         if (existingUser.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                    Map.of("success", false, "message", "User not found"));
+                    Map.of("success", false,
+                            "message", "User not found"));
         }
 
-        return ResponseEntity.ok(safeUserDetails(existingUser.get()));
+        return ResponseEntity.ok(
+                safeUserDetails(existingUser.get()));
     }
 
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@RequestBody User user) {
 
-        if (user.getEmail() == null || user.getPassword() == null) {
+        if (user.getEmail() == null || user.getPassword() == null
+                || user.getEmail().trim().isEmpty()
+                || user.getPassword().isEmpty()) {
+
             return ResponseEntity.badRequest().body(
                     Map.of("success", false,
                             "message", "Email and password are required"));
         }
 
+        String email = user.getEmail().trim();
+
         Optional<User> existingUser =
-                userRepository.findByEmail(user.getEmail().trim());
+                userRepository.findByEmail(email);
 
         if (existingUser.isEmpty()) {
+            System.out.println("Login: User not found");
+
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
                     Map.of("success", false,
                             "message", "Invalid email or password"));
@@ -157,8 +173,14 @@ public class UserController {
 
         User foundUser = existingUser.get();
 
-        if (!passwordService.matches(
-                user.getPassword(), foundUser.getPassword())) {
+        boolean passwordMatch = passwordService.matches(
+                user.getPassword(),
+                foundUser.getPassword());
+
+        System.out.println("Login: Email found = " + email);
+        System.out.println("Login: Password match = " + passwordMatch);
+
+        if (!passwordMatch) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
                     Map.of("success", false,
                             "message", "Invalid email or password"));
@@ -173,6 +195,7 @@ public class UserController {
         if (!passwordService.isEncoded(foundUser.getPassword())) {
             foundUser.setPassword(
                     passwordService.encode(user.getPassword()));
+
             userRepository.save(foundUser);
         }
 
@@ -213,11 +236,13 @@ public class UserController {
             try {
                 emailService.sendPasswordResetEmail(
                         user.getEmail(), token);
+
             } catch (Exception e) {
                 e.printStackTrace();
 
                 user.setPasswordResetToken(null);
                 user.setPasswordResetExpiry(null);
+
                 userRepository.save(user);
 
                 return ResponseEntity.internalServerError().body(
@@ -241,6 +266,7 @@ public class UserController {
 
         if (token == null || newPassword == null
                 || newPassword.length() < 8) {
+
             return ResponseEntity.badRequest().body(
                     Map.of("success", false,
                             "message", "Valid token and password of at least 8 characters are required"));
@@ -260,6 +286,7 @@ public class UserController {
         if (user.getPasswordResetExpiry() == null
                 || user.getPasswordResetExpiry().isBefore(
                         LocalDateTime.now())) {
+
             return ResponseEntity.badRequest().body(
                     Map.of("success", false,
                             "message", "Reset link expired. Request a new link."));
@@ -277,12 +304,15 @@ public class UserController {
     }
 
     private Map<String, Object> safeUserDetails(User user) {
+
         Map<String, Object> data = new HashMap<>();
+
         data.put("id", user.getId());
         data.put("name", user.getName());
         data.put("email", user.getEmail());
         data.put("role", user.getRole());
         data.put("verified", user.isVerified());
+
         return data;
     }
 }
